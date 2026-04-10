@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #251f21;
+  background: #f4f1ec;
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: linear-gradient(180deg, #faf8f4 0%, #f2eee8 48%, #eeece7 100%);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid rgba(185, 142, 69, 0.7);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(185, 142, 69, 0.35);
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen bg-paper text-ink;
+  }
+
+  .panel {
+    @apply rounded-lg border border-white/70 bg-white/90 shadow-subtle backdrop-blur;
+  }
+
+  .premium-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-md bg-vine px-4 py-2 text-sm font-semibold text-white shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:bg-pinot hover:shadow-lift active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .secondary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-ink/15 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-vine/35 hover:bg-porcelain hover:shadow-subtle active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .ghost-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-vine transition duration-200 hover:bg-vine/10 active:bg-vine/15 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .field {
+    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm transition duration-200 placeholder:text-smoke focus:border-gold focus:bg-porcelain focus:shadow-subtle;
+  }
+
+  .field-label {
+    @apply text-xs font-bold uppercase tracking-wide text-smoke;
+  }
+
+  .metric-card {
+    @apply rounded-lg border border-white/70 bg-white/95 p-5 shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:shadow-lift;
+  }
+
+  .table-th {
+    @apply sticky top-0 z-10 border-b border-ink/10 bg-porcelain/95 px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-smoke backdrop-blur first:rounded-tl-lg last:rounded-tr-lg;
+  }
+
+  .table-td {
+    @apply border-b border-ink/10 px-4 py-4 align-top text-sm;
+  }
+
+  .section-kicker {
+    @apply text-xs font-bold uppercase tracking-wide text-vine;
+  }
+
+  .premium-surface {
+    @apply rounded-lg border border-white/70 bg-white/85 shadow-subtle backdrop-blur;
+  }
+
+  .soft-card {
+    @apply rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm;
+  }
+
+  .nav-item {
+    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold text-smoke transition duration-200 hover:bg-white/80 hover:text-vine;
+  }
+
+  .nav-item-active {
+    @apply bg-white text-vine shadow-sm;
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-ink/10;
+  }
+
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-y-0 left-0 w-1/2 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent;
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(220%);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
