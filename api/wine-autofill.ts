@@ -1,5 +1,5 @@
-import { buildWineAutofillPrompt, wineAutofillJsonSchema } from './_wineAutofillPrompt';
-import { validateWineAutofillRequest, validateWineAutofillResult } from './_wineAutofillValidation';
+import { buildWineAutofillPrompt, wineAutofillJsonSchema } from './_wineAutofillPrompt.js';
+import { validateWineAutofillRequest, validateWineAutofillResult } from './_wineAutofillValidation.js';
 
 const OPENAI_RESPONSES_URL = 'https://api.openai.com/v1/responses';
 const DEFAULT_MODEL = 'gpt-4.1-mini';
