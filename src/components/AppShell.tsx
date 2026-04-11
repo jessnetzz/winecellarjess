@@ -25,9 +25,9 @@ const navItems: Array<{ label: string; href: string; icon: IconName }> = [
 
 function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
   return (
-    <aside className="hidden min-h-screen w-72 shrink-0 border-r border-ink/10 bg-porcelain/90 px-4 py-5 backdrop-blur xl:sticky xl:top-0 xl:block">
+    <aside className="hidden min-h-screen w-72 shrink-0 border-r border-[#E7DCCB] bg-porcelain/90 px-4 py-5 backdrop-blur xl:sticky xl:top-0 xl:block">
       <div className="flex items-center gap-3 px-2">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-vine text-white shadow-subtle">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-plum text-white shadow-subtle">
           <Icon name="glass" className="h-6 w-6" />
         </div>
         <div>
@@ -36,7 +36,7 @@ function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
         </div>
       </div>
 
-      <nav className="mt-8 space-y-1" aria-label="Primary navigation">
+      <nav className="mt-8 space-y-1 border-y border-[#E7DCCB] py-4" aria-label="Primary navigation">
         {navItems.map((item, index) => (
           <a key={item.href} className={`nav-item ${index === 0 ? 'nav-item-active' : ''}`} href={item.href}>
             <Icon name={item.icon} className="h-5 w-5" />
@@ -49,7 +49,7 @@ function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
         </button>
       </nav>
 
-      <div className="mt-10 rounded-lg border border-vine/15 bg-white p-4">
+      <div className="sidebar-note mt-10 rounded-lg border border-plum/15 bg-white/75 p-4">
         <p className="section-kicker">Drink windows</p>
         <p className="mt-2 text-sm leading-6 text-smoke">
           Use the dashboard and badges to spot bottles that are at peak, ready now, or slipping past their ideal year.
@@ -71,7 +71,7 @@ function TopNav({
   onToggleView,
 }: Omit<AppShellProps, 'children'>) {
   return (
-    <header className="sticky top-0 z-30 border-b border-ink/10 bg-paper/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-[#E7DCCB] bg-paper/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="xl:hidden">
@@ -102,8 +102,8 @@ function TopNav({
               <Icon name="plus" className="h-4 w-4" />
               Add wine
             </button>
-            <div className="flex items-center gap-2 rounded-lg border border-ink/10 bg-white px-3 py-2 shadow-sm">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-vine/10 text-vine">
+            <div className="flex items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm">
+              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-lavender/20 text-plum">
                 <Icon name="user" className="h-4 w-4" />
               </span>
               <span className="max-w-[170px] truncate text-sm font-semibold text-ink">{user.email}</span>

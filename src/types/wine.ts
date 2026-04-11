@@ -112,3 +112,40 @@ export interface AIAdviceResult {
   cellarNotesSummary: string;
   conciseGuidance: string;
 }
+
+export type WineAutofillField<T> = {
+  value: T | null;
+  source: 'known' | 'inferred' | 'unknown';
+  note?: string;
+};
+
+export interface WineAutofillInput {
+  producer: string;
+  wineName: string;
+  vintage: number;
+}
+
+export interface WineAutofillResult {
+  producer: WineAutofillField<string>;
+  wineName: WineAutofillField<string>;
+  vintage: WineAutofillField<number>;
+  appellation: WineAutofillField<string>;
+  region: WineAutofillField<string>;
+  country: WineAutofillField<string>;
+  varietal: WineAutofillField<string>;
+  styleCategory: WineAutofillField<WineStyle>;
+  color: WineAutofillField<string>;
+  body: WineAutofillField<string>;
+  acidity: WineAutofillField<string>;
+  tannin: WineAutofillField<string>;
+  drinkWindowStartYear: WineAutofillField<number>;
+  drinkWindowEndYear: WineAutofillField<number>;
+  bestDrinkByYear: WineAutofillField<number>;
+  estimatedPeakYear: WineAutofillField<number>;
+  tastingNotes: WineAutofillField<string>;
+  foodPairingNotes: WineAutofillField<string>;
+  cellarNote: WineAutofillField<string>;
+  confidence: number;
+  uncertainFields: string[];
+  knownVsInferredSummary: string;
+}

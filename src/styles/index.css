@@ -4,9 +4,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Liam Typeface';
+  src: url('/fonts/liam-typeface.otf') format('opentype');
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+}
+
 :root {
   color: #251f21;
-  background: #f4f1ec;
+  background: #f8f2e8;
   font-synthesis-weight: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -20,7 +28,10 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  background: linear-gradient(180deg, #faf8f4 0%, #f2eee8 48%, #eeece7 100%);
+  background:
+    radial-gradient(circle at 18px 18px, rgba(110, 74, 114, 0.08) 0 1px, transparent 1px 100%),
+    linear-gradient(180deg, #fff9f0 0%, #f8f2e8 50%, #f2eadc 100%);
+  background-size: 42px 42px, auto;
 }
 
 button,
@@ -45,27 +56,40 @@ select:focus-visible {
 
 @layer components {
   .app-shell {
-    @apply min-h-screen bg-paper text-ink;
+    @apply relative min-h-screen bg-paper text-ink;
+  }
+
+  .app-shell::before {
+    content: '✦        ·              ✧';
+    @apply pointer-events-none fixed left-5 top-28 hidden text-sm text-lavender/35 xl:block;
+  }
+
+  .app-shell::after {
+    content: '·        ✦';
+    @apply pointer-events-none fixed bottom-10 right-8 hidden text-xs text-gold/35 xl:block;
   }
 
   .panel {
-    @apply rounded-lg border border-white/70 bg-white/90 shadow-subtle backdrop-blur;
+    @apply rounded-lg border border-[#E7DCCB] bg-porcelain/90 shadow-subtle backdrop-blur;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 10px 30px rgba(42, 31, 33, 0.075);
   }
 
   .premium-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md bg-vine px-4 py-2 text-sm font-semibold text-white shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:bg-pinot hover:shadow-lift active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-plum px-4 py-2 text-sm font-semibold text-white shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:bg-pinot hover:shadow-lift active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 30px rgba(96, 64, 104, 0.16);
   }
 
   .secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-ink/15 bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-vine/35 hover:bg-porcelain hover:shadow-subtle active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-plum/20 bg-porcelain px-4 py-2 text-sm font-semibold text-ink shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-plum/40 hover:bg-white hover:text-plum hover:shadow-subtle active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 6px 16px rgba(42, 31, 33, 0.05);
   }
 
   .ghost-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-vine transition duration-200 hover:bg-vine/10 active:bg-vine/15 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-plum transition duration-200 hover:bg-lavender/15 active:bg-lavender/20 disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .field {
-    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm transition duration-200 placeholder:text-smoke focus:border-gold focus:bg-porcelain focus:shadow-subtle;
+    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm transition duration-200 placeholder:text-smoke focus:border-lavender focus:bg-porcelain focus:shadow-subtle;
   }
 
   .field-label {
@@ -73,7 +97,15 @@ select:focus-visible {
   }
 
   .metric-card {
-    @apply rounded-lg border border-white/70 bg-white/95 p-5 shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:shadow-lift;
+    @apply relative overflow-hidden rounded-lg border border-[#E7DCCB] bg-porcelain/95 p-5 shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:shadow-lift;
+    background:
+      linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(248, 242, 232, 0.94)),
+      radial-gradient(circle at right top, rgba(185, 162, 197, 0.18), transparent 32%);
+  }
+
+  .metric-card::after {
+    content: '✦';
+    @apply pointer-events-none absolute right-4 top-3 text-xs text-lavender/50;
   }
 
   .table-th {
@@ -85,23 +117,76 @@ select:focus-visible {
   }
 
   .section-kicker {
-    @apply text-xs font-bold uppercase tracking-wide text-vine;
+    @apply text-xs font-bold uppercase tracking-wide text-plum;
   }
 
   .premium-surface {
-    @apply rounded-lg border border-white/70 bg-white/85 shadow-subtle backdrop-blur;
+    @apply rounded-lg border border-[#E7DCCB] bg-porcelain/85 shadow-subtle backdrop-blur;
   }
 
   .soft-card {
-    @apply rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm;
+    @apply rounded-lg border border-[#E7DCCB] bg-porcelain p-4 shadow-sm;
+  }
+
+  .soft-card h3::after {
+    content: '';
+    @apply mt-3 block h-px w-16 bg-gradient-to-r from-lavender via-gold to-transparent;
   }
 
   .nav-item {
-    @apply flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold text-smoke transition duration-200 hover:bg-white/80 hover:text-vine;
+    @apply flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm font-semibold text-smoke transition duration-200 hover:border-lavender/20 hover:bg-white/70 hover:text-plum;
   }
 
   .nav-item-active {
-    @apply bg-white text-vine shadow-sm;
+    @apply border-lavender/25 bg-white/85 text-plum shadow-sm;
+  }
+
+  .whimsy-hero {
+    @apply relative overflow-hidden bg-porcelain/90;
+    background:
+      linear-gradient(135deg, rgba(255, 249, 240, 0.96), rgba(248, 242, 232, 0.88)),
+      radial-gradient(circle at 92% 20%, rgba(185, 162, 197, 0.22), transparent 24%),
+      radial-gradient(circle at 14% 90%, rgba(185, 142, 69, 0.12), transparent 24%);
+  }
+
+  .whimsy-hero::before {
+    content: '☾';
+    @apply pointer-events-none absolute right-8 top-6 text-5xl text-lavender/35;
+  }
+
+  .whimsy-hero::after {
+    content: '✦   ·   ✿   ·   ✧';
+    @apply pointer-events-none absolute bottom-6 right-10 text-sm text-gold/45;
+  }
+
+  .drink-soon-header {
+    @apply relative bg-plum;
+    background:
+      linear-gradient(135deg, #5f315f 0%, #6e4a72 54%, #7c3455 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  }
+
+  .drink-soon-header::after {
+    content: '☾  ✦  ✧';
+    @apply pointer-events-none absolute right-5 top-5 text-sm text-straw/60;
+  }
+
+  .priority-card {
+    @apply relative rounded-lg border border-[#E7DCCB] bg-white/85 p-4 shadow-sm;
+  }
+
+  .priority-card::after {
+    content: '✿';
+    @apply pointer-events-none absolute bottom-3 right-4 text-[10px] text-lavender/45;
+  }
+
+  .sidebar-note {
+    @apply relative;
+  }
+
+  .sidebar-note::after {
+    content: '✿';
+    @apply pointer-events-none absolute right-4 top-4 text-xs text-lavender/60;
   }
 
   .skeleton {

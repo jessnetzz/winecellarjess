@@ -204,17 +204,17 @@ function AuthenticatedCellar({ user }: { user: User }) {
       onToggleView={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
     >
       <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="grid gap-6 rounded-lg border border-white/70 bg-porcelain/80 p-6 shadow-subtle lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
+        <section className="whimsy-hero grid gap-6 rounded-lg border border-[#E7DCCB] p-6 shadow-subtle lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
           <div>
             <p className="section-kicker">Private cellar</p>
-            <h1 className="mt-3 max-w-4xl font-serif text-5xl font-bold leading-tight text-ink sm:text-6xl">
-              Drink windows, tasting history, and cellar value in one calm place.
+            <h1 className="mt-3 max-w-4xl font-liam text-5xl font-normal leading-tight text-ink sm:text-6xl">
+              Your collection, in one place—drink windows, tasting notes, and cellar value, thoughtfully kept.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-7 text-smoke">
               Track bottles, spot what is at peak, and keep your Supabase-backed collection in sync across your devices.
             </p>
           </div>
-          <div className="rounded-lg border border-vine/15 bg-white p-5">
+          <div className="rounded-lg border border-plum/15 bg-white/80 p-5 shadow-sm">
             <p className="field-label">Signed in</p>
             <p className="mt-2 truncate text-sm font-bold text-ink">{user.email}</p>
             <p className="mt-3 text-sm leading-6 text-smoke">Your private rows are loaded through the existing Supabase service layer.</p>

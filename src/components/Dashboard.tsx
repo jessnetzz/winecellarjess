@@ -37,7 +37,7 @@ function topEntries(data: Record<string, number>, limit = 6) {
 
 function MetricCard({ label, value, helper, icon, tone = 'vine' }: MetricCardProps) {
   const toneClasses = {
-    vine: 'bg-vine/10 text-vine',
+    vine: 'bg-plum/10 text-plum',
     moss: 'bg-moss/10 text-moss',
     gold: 'bg-gold/15 text-[#7B5A22]',
     clay: 'bg-clay/10 text-clay',
@@ -74,7 +74,7 @@ function BarList({ title, data }: { title: string; data: Record<string, number> 
               <span className="font-bold text-smoke">{value}</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-ink/10">
-              <div className="h-full rounded-full bg-gradient-to-r from-vine via-pinot to-gold" style={{ width: `${Math.max(8, (value / max) * 100)}%` }} />
+              <div className="h-full rounded-full bg-gradient-to-r from-plum via-lavender to-gold" style={{ width: `${Math.max(8, (value / max) * 100)}%` }} />
             </div>
           </div>
         ))}
@@ -85,22 +85,22 @@ function BarList({ title, data }: { title: string; data: Record<string, number> 
 
 function PriorityStrip({ title, wines, onSelectWine }: { title: string; wines: Wine[]; onSelectWine?: (wine: Wine) => void }) {
   return (
-    <div className="rounded-lg border border-ink/10 bg-white p-4">
+    <div className="priority-card">
       <div className="flex items-center justify-between gap-3">
         <h3 className="font-serif text-xl font-bold text-ink">{title}</h3>
-        <span className="rounded-md bg-vine/10 px-2.5 py-1 text-xs font-bold text-vine">{wines.length}</span>
+        <span className="rounded-md bg-plum/10 px-2.5 py-1 text-xs font-bold text-plum">{wines.length}</span>
       </div>
       <div className="mt-4 space-y-2">
         {wines.length ? (
           wines.slice(0, 4).map((wine) => (
             <button
               key={wine.id}
-              className="group flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-3 py-2 text-left transition hover:border-vine/20 hover:bg-paper"
+              className="group flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-3 py-2 text-left transition hover:border-plum/20 hover:bg-paper"
               type="button"
               onClick={() => onSelectWine?.(wine)}
             >
               <span className="min-w-0">
-                <span className="block truncate font-semibold text-ink group-hover:text-vine">{wine.vintage} {wine.name}</span>
+                <span className="block truncate font-semibold text-ink group-hover:text-plum">{wine.vintage} {wine.name}</span>
                 <span className="block truncate text-sm text-smoke">{wine.producer} · {wine.region}</span>
               </span>
               <DrinkStatusBadge wine={wine} compact />
@@ -145,7 +145,7 @@ export default function Dashboard({ wines, onSelectWine }: DashboardProps) {
 
       <div className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <section className="panel overflow-hidden">
-          <div className="border-b border-ink/10 bg-vine px-5 py-4 text-white">
+          <div className="drink-soon-header border-b border-ink/10 px-5 py-4 text-white">
             <p className="text-xs font-bold uppercase tracking-wide text-white/70">Today’s cellar read</p>
             <h2 className="mt-2 font-serif text-3xl font-bold">Drink Soon</h2>
           </div>

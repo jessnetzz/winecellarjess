@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react';
 import BottleImage from './BottleImage';
-import { Wine, WineFormData, WineStatus, WineStyle } from '../types/wine';
+import { Wine, WineAutofillResult, WineFormData, WineStatus, WineStyle } from '../types/wine';
+import { aiWineAutofillService } from '../services/aiWineAutofillService';
 import { createId } from '../utils/id';
 
 interface WineFormProps {
@@ -59,20 +60,169 @@ type NumericFormKey =
   | 'bestDrinkBy'
   | 'personalRating';
 
+type SuggestedFormKey =
+  | 'producer'
+  | 'name'
+  | 'vintage'
+  | 'appellation'
+  | 'region'
+  | 'country'
+  | 'varietal'
+  | 'style'
+  | 'drinkWindowStart'
+  | 'drinkWindowEnd'
+  | 'bestDrinkBy'
+  | 'tastingNotes'
+  | 'foodPairingNotes'
+  | 'aiAdvice';
+
+const autofillFieldLabels: Partial<Record<SuggestedFormKey, string>> = {
+  producer: 'producer',
+  name: 'wine name',
+  vintage: 'vintage',
+  appellation: 'appellation',
+  region: 'region',
+  country: 'country',
+  varietal: 'varietal',
+  style: 'style category',
+  drinkWindowStart: 'drink window start year',
+  drinkWindowEnd: 'drink window end year',
+  bestDrinkBy: 'best drink by year',
+  tastingNotes: 'tasting notes',
+  foodPairingNotes: 'food pairing notes',
+  aiAdvice: 'cellar note',
+};
+
+function hasValue(value: unknown) {
+  return value !== undefined && value !== null && String(value).trim() !== '';
+}
+
+function SuggestedMark({ show }: { show: boolean }) {
+  if (!show) return null;
+  return <span className="ml-2 rounded-md bg-lavender/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-plum">AI suggested</span>;
+}
+
 export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   const [form, setForm] = useState<WineFormData>(() => (wine ? { ...wine } : defaultFormData()));
   const [errors, setErrors] = useState<string[]>([]);
+  const [suggestedFields, setSuggestedFields] = useState<Set<SuggestedFormKey>>(new Set());
+  const [autofillResult, setAutofillResult] = useState<WineAutofillResult | null>(null);
+  const [autofillError, setAutofillError] = useState<string | null>(null);
+  const [isAutofilling, setIsAutofilling] = useState(false);
   const isEditing = Boolean(wine);
 
   const previewName = useMemo(() => form.name || 'New cellar bottle', [form.name]);
+  const canAutofill = Boolean(form.producer.trim() && form.name.trim() && form.vintage && form.vintage >= 1800);
+  const defaultData = useMemo(() => defaultFormData(), []);
 
   const update = <K extends keyof WineFormData>(key: K, value: WineFormData[K]) => {
+    if (suggestedFields.has(key as SuggestedFormKey)) {
+      setSuggestedFields((current) => {
+        const next = new Set(current);
+        next.delete(key as SuggestedFormKey);
+        return next;
+      });
+    }
     setForm((current) => ({ ...current, [key]: value }));
   };
 
   const updateNumber = (key: NumericFormKey, value: string) => {
+    if (suggestedFields.has(key as SuggestedFormKey)) {
+      setSuggestedFields((current) => {
+        const next = new Set(current);
+        next.delete(key as SuggestedFormKey);
+        return next;
+      });
+    }
     const parsed = Number(value);
     setForm((current) => ({ ...current, [key]: value === '' || Number.isNaN(parsed) ? undefined : parsed }) as WineFormData);
+  };
+
+  const suggestedClass = (key: SuggestedFormKey) =>
+    suggestedFields.has(key) ? 'border-lavender/70 bg-lavender/10 ring-1 ring-lavender/40' : '';
+
+  const markSuggested = (keys: SuggestedFormKey[]) => {
+    setSuggestedFields((current) => {
+      const next = new Set(current);
+      keys.forEach((key) => next.add(key));
+      return next;
+    });
+  };
+
+  const runAutofill = async () => {
+    if (!canAutofill || isAutofilling) return;
+
+    setAutofillError(null);
+    setIsAutofilling(true);
+
+    try {
+      const result = await aiWineAutofillService.getWineAutofill({
+        producer: form.producer,
+        wineName: form.name,
+        vintage: Number(form.vintage),
+      });
+      const shouldAssign = (key: keyof WineFormData, shouldReplace = false) => shouldReplace || !hasValue(form[key]);
+      const nextSuggested: SuggestedFormKey[] = [
+        result.producer.value && shouldAssign('producer') ? 'producer' : null,
+        result.wineName.value && shouldAssign('name') ? 'name' : null,
+        result.vintage.value && shouldAssign('vintage') ? 'vintage' : null,
+        result.appellation.value && shouldAssign('appellation') ? 'appellation' : null,
+        result.region.value && shouldAssign('region') ? 'region' : null,
+        result.country.value && shouldAssign('country') ? 'country' : null,
+        result.varietal.value && shouldAssign('varietal') ? 'varietal' : null,
+        result.styleCategory.value && shouldAssign('style', !isEditing && form.style === defaultData.style) ? 'style' : null,
+        result.drinkWindowStartYear.value && shouldAssign('drinkWindowStart', !isEditing && form.drinkWindowStart === defaultData.drinkWindowStart) ? 'drinkWindowStart' : null,
+        result.drinkWindowEndYear.value && shouldAssign('drinkWindowEnd', !isEditing && form.drinkWindowEnd === defaultData.drinkWindowEnd) ? 'drinkWindowEnd' : null,
+        result.bestDrinkByYear.value && shouldAssign('bestDrinkBy', !isEditing && form.bestDrinkBy === defaultData.bestDrinkBy) ? 'bestDrinkBy' : null,
+        result.tastingNotes.value && shouldAssign('tastingNotes') ? 'tastingNotes' : null,
+        result.foodPairingNotes.value && shouldAssign('foodPairingNotes') ? 'foodPairingNotes' : null,
+        result.cellarNote.value && shouldAssign('aiAdvice') ? 'aiAdvice' : null,
+      ].filter(Boolean) as SuggestedFormKey[];
+
+      setAutofillResult(result);
+      setForm((current) => {
+        const next = { ...current };
+
+        const assignText = (key: SuggestedFormKey, value: string | null, shouldReplace = false) => {
+          if (!value) return;
+          const currentValue = next[key as keyof WineFormData];
+          if (shouldReplace || !hasValue(currentValue)) {
+            (next as Record<string, unknown>)[key] = value;
+          }
+        };
+
+        const assignNumber = (key: SuggestedFormKey, value: number | null, shouldReplace = false) => {
+          if (!value) return;
+          const currentValue = next[key as keyof WineFormData];
+          if (shouldReplace || !hasValue(currentValue)) {
+            (next as Record<string, unknown>)[key] = value;
+          }
+        };
+
+        assignText('producer', result.producer.value);
+        assignText('name', result.wineName.value);
+        assignNumber('vintage', result.vintage.value);
+        assignText('appellation', result.appellation.value);
+        assignText('region', result.region.value);
+        assignText('country', result.country.value);
+        assignText('varietal', result.varietal.value);
+        assignText('style', result.styleCategory.value, !isEditing && current.style === defaultData.style);
+        assignNumber('drinkWindowStart', result.drinkWindowStartYear.value, !isEditing && current.drinkWindowStart === defaultData.drinkWindowStart);
+        assignNumber('drinkWindowEnd', result.drinkWindowEndYear.value, !isEditing && current.drinkWindowEnd === defaultData.drinkWindowEnd);
+        assignNumber('bestDrinkBy', result.bestDrinkByYear.value, !isEditing && current.bestDrinkBy === defaultData.bestDrinkBy);
+        assignText('tastingNotes', result.tastingNotes.value);
+        assignText('foodPairingNotes', result.foodPairingNotes.value);
+        assignText('aiAdvice', result.cellarNote.value);
+
+        return next;
+      });
+
+      markSuggested(nextSuggested);
+    } catch (caught) {
+      setAutofillError(caught instanceof Error ? caught.message : 'AI autofill could not finish. Your typed values are still safe.');
+    } finally {
+      setIsAutofilling(false);
+    }
   };
 
   const submit = (event: FormEvent) => {
@@ -149,40 +299,92 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
 
       <div className="space-y-8">
         <div className="rounded-lg border border-ink/10 bg-porcelain p-5">
-          <p className="section-kicker">Basic info</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Bottle identity</h3>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="section-kicker">Basic info</p>
+              <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Bottle identity</h3>
+              <p className="mt-2 text-sm leading-6 text-smoke">
+                Enter producer, wine name, and vintage, then ask the sommelier to suggest likely details.
+              </p>
+            </div>
+            <button
+              className="premium-button shrink-0"
+              type="button"
+              onClick={() => void runAutofill()}
+              disabled={!canAutofill || isAutofilling}
+            >
+              {isAutofilling ? 'Generating suggested wine details...' : 'Autofill with AI'}
+            </button>
+          </div>
+          {autofillError ? (
+            <div className="mt-4 rounded-lg border border-clay/30 bg-clay/10 p-3 text-sm leading-6 text-clay">
+              {autofillError}
+            </div>
+          ) : null}
+          {autofillResult ? (
+            <div className="mt-4 rounded-lg border border-lavender/30 bg-lavender/10 p-4 text-sm leading-6 text-smoke">
+              <p className="font-bold text-ink">AI suggested details — review before saving</p>
+              <p className="mt-1">
+                Confidence {Math.round(autofillResult.confidence * 100)}%. {autofillResult.knownVsInferredSummary}
+              </p>
+              {autofillResult.uncertainFields.length ? (
+                <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-plum">
+                  Inferred fields: {autofillResult.uncertainFields.map((fieldName) => autofillFieldLabels[fieldName as SuggestedFormKey] ?? fieldName).join(', ')}
+                </p>
+              ) : null}
+              <div className="mt-3 grid gap-2 text-xs sm:grid-cols-4">
+                {[
+                  ['Color', autofillResult.color.value],
+                  ['Body', autofillResult.body.value],
+                  ['Acidity', autofillResult.acidity.value],
+                  ['Tannin', autofillResult.tannin.value],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-md border border-lavender/20 bg-white/60 px-3 py-2">
+                    <span className="block font-bold uppercase tracking-wide text-plum">{label}</span>
+                    <span className="mt-1 block text-sm text-ink">{value || 'Unknown'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {isAutofilling ? (
+            <div className="mt-4 space-y-2">
+              <div className="skeleton h-3 w-2/3" />
+              <div className="skeleton h-3 w-1/2" />
+            </div>
+          ) : null}
           <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <label>
-              <span className="field-label">Wine name</span>
-              <input className="field mt-2" required value={form.name} onChange={(event) => update('name', event.target.value)} />
+              <span className="field-label">Wine name<SuggestedMark show={suggestedFields.has('name')} /></span>
+              <input className={`field mt-2 ${suggestedClass('name')}`} required value={form.name} onChange={(event) => update('name', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Producer</span>
-              <input className="field mt-2" required value={form.producer} onChange={(event) => update('producer', event.target.value)} />
+              <span className="field-label">Producer<SuggestedMark show={suggestedFields.has('producer')} /></span>
+              <input className={`field mt-2 ${suggestedClass('producer')}`} required value={form.producer} onChange={(event) => update('producer', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Vintage</span>
-              <input className="field mt-2" required type="number" value={numberValue(form.vintage)} onChange={(event) => updateNumber('vintage', event.target.value)} />
+              <span className="field-label">Vintage<SuggestedMark show={suggestedFields.has('vintage')} /></span>
+              <input className={`field mt-2 ${suggestedClass('vintage')}`} required type="number" value={numberValue(form.vintage)} onChange={(event) => updateNumber('vintage', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Appellation</span>
-              <input className="field mt-2" value={form.appellation} onChange={(event) => update('appellation', event.target.value)} />
+              <span className="field-label">Appellation<SuggestedMark show={suggestedFields.has('appellation')} /></span>
+              <input className={`field mt-2 ${suggestedClass('appellation')}`} value={form.appellation} onChange={(event) => update('appellation', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Region</span>
-              <input className="field mt-2" value={form.region} onChange={(event) => update('region', event.target.value)} />
+              <span className="field-label">Region<SuggestedMark show={suggestedFields.has('region')} /></span>
+              <input className={`field mt-2 ${suggestedClass('region')}`} value={form.region} onChange={(event) => update('region', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Country</span>
-              <input className="field mt-2" value={form.country} onChange={(event) => update('country', event.target.value)} />
+              <span className="field-label">Country<SuggestedMark show={suggestedFields.has('country')} /></span>
+              <input className={`field mt-2 ${suggestedClass('country')}`} value={form.country} onChange={(event) => update('country', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Grape / varietal</span>
-              <input className="field mt-2" value={form.varietal} onChange={(event) => update('varietal', event.target.value)} />
+              <span className="field-label">Grape / varietal<SuggestedMark show={suggestedFields.has('varietal')} /></span>
+              <input className={`field mt-2 ${suggestedClass('varietal')}`} value={form.varietal} onChange={(event) => update('varietal', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Style</span>
-              <select className="field mt-2" value={form.style} onChange={(event) => update('style', event.target.value as WineStyle)}>
+              <span className="field-label">Style<SuggestedMark show={suggestedFields.has('style')} /></span>
+              <select className={`field mt-2 ${suggestedClass('style')}`} value={form.style} onChange={(event) => update('style', event.target.value as WineStyle)}>
                 {wineStyles.map((style) => (
                   <option key={style} value={style}>
                     {style}
@@ -243,16 +445,16 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
           <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Drink window</h3>
           <div className="mt-4 grid gap-4 md:grid-cols-3">
             <label>
-              <span className="field-label">Start year</span>
-              <input className="field mt-2" type="number" value={numberValue(form.drinkWindowStart)} onChange={(event) => updateNumber('drinkWindowStart', event.target.value)} />
+              <span className="field-label">Start year<SuggestedMark show={suggestedFields.has('drinkWindowStart')} /></span>
+              <input className={`field mt-2 ${suggestedClass('drinkWindowStart')}`} type="number" value={numberValue(form.drinkWindowStart)} onChange={(event) => updateNumber('drinkWindowStart', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">End year</span>
-              <input className="field mt-2" type="number" value={numberValue(form.drinkWindowEnd)} onChange={(event) => updateNumber('drinkWindowEnd', event.target.value)} />
+              <span className="field-label">End year<SuggestedMark show={suggestedFields.has('drinkWindowEnd')} /></span>
+              <input className={`field mt-2 ${suggestedClass('drinkWindowEnd')}`} type="number" value={numberValue(form.drinkWindowEnd)} onChange={(event) => updateNumber('drinkWindowEnd', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Best drink by</span>
-              <input className="field mt-2" type="number" value={numberValue(form.bestDrinkBy)} onChange={(event) => updateNumber('bestDrinkBy', event.target.value)} />
+              <span className="field-label">Best drink by<SuggestedMark show={suggestedFields.has('bestDrinkBy')} /></span>
+              <input className={`field mt-2 ${suggestedClass('bestDrinkBy')}`} type="number" value={numberValue(form.bestDrinkBy)} onChange={(event) => updateNumber('bestDrinkBy', event.target.value)} />
             </label>
           </div>
         </div>
@@ -293,12 +495,12 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
           <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Notes</h3>
           <div className="mt-4 grid gap-4">
             <label>
-              <span className="field-label">Tasting notes</span>
-              <textarea className="field mt-2 min-h-24" value={form.tastingNotes} onChange={(event) => update('tastingNotes', event.target.value)} />
+              <span className="field-label">Tasting notes<SuggestedMark show={suggestedFields.has('tastingNotes')} /></span>
+              <textarea className={`field mt-2 min-h-24 ${suggestedClass('tastingNotes')}`} value={form.tastingNotes} onChange={(event) => update('tastingNotes', event.target.value)} />
             </label>
             <label>
-              <span className="field-label">Food pairing notes</span>
-              <textarea className="field mt-2 min-h-20" value={form.foodPairingNotes} onChange={(event) => update('foodPairingNotes', event.target.value)} />
+              <span className="field-label">Food pairing notes<SuggestedMark show={suggestedFields.has('foodPairingNotes')} /></span>
+              <textarea className={`field mt-2 min-h-20 ${suggestedClass('foodPairingNotes')}`} value={form.foodPairingNotes} onChange={(event) => update('foodPairingNotes', event.target.value)} />
             </label>
             <label>
               <span className="field-label">Personal rating</span>
@@ -322,8 +524,8 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
               </div>
             </label>
             <label>
-              <span className="field-label">AI advice</span>
-              <textarea className="field mt-2 min-h-20" value={form.aiAdvice} onChange={(event) => update('aiAdvice', event.target.value)} />
+              <span className="field-label">AI advice<SuggestedMark show={suggestedFields.has('aiAdvice')} /></span>
+              <textarea className={`field mt-2 min-h-20 ${suggestedClass('aiAdvice')}`} value={form.aiAdvice} onChange={(event) => update('aiAdvice', event.target.value)} />
             </label>
           </div>
         </div>
