@@ -16,7 +16,7 @@ interface WineDetailProps {
 
 function DetailItem({ label, value }: { label: string; value: string | number | undefined }) {
   return (
-    <div className="rounded-lg border border-ink/10 bg-porcelain p-4">
+    <div className="interactive-surface rounded-lg border border-ink/10 bg-porcelain p-4 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-white hover:shadow-sm">
       <p className="field-label">{label}</p>
       <p className="mt-2 font-semibold text-ink">{value || 'Not set'}</p>
     </div>
@@ -94,11 +94,11 @@ export default function WineDetail({ wine, onEdit, onDelete, onUpdateWine, onAdd
         </section>
 
         <section className="grid gap-5 lg:grid-cols-2">
-          <div className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm">
+          <div className="tasting-note-card">
             <p className="section-kicker">Tasting notes</p>
             <p className="mt-3 text-sm leading-6 text-ink">{wine.tastingNotes || 'No tasting notes yet.'}</p>
           </div>
-          <div className="rounded-lg border border-ink/10 bg-white p-5 shadow-sm">
+          <div className="tasting-note-card">
             <p className="section-kicker">Food pairing notes</p>
             <p className="mt-3 text-sm leading-6 text-ink">{wine.foodPairingNotes || 'No pairing notes yet.'}</p>
           </div>

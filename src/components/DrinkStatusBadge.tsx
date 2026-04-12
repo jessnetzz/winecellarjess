@@ -40,6 +40,15 @@ const statusStyles: Record<DrinkabilityStatus, { badge: string; dot: string; bar
   },
 };
 
+const statusHints: Record<DrinkabilityStatus, string> = {
+  'Too young': 'Hold for a little longer',
+  'Approaching window': 'Coming into its window',
+  'Ready to drink': 'Ready when you are',
+  'Peak window': 'At peak',
+  'Nearing end of peak': 'Drink soon',
+  'Past peak': 'Past peak',
+};
+
 function timelineProgress(wine: Wine) {
   const currentYear = new Date().getFullYear();
   const start = wine.drinkWindowStart - 2;
@@ -54,12 +63,13 @@ export default function DrinkStatusBadge({ wine, compact = false, showTimeline =
   return (
     <span className={showTimeline ? 'block' : 'inline-block'} title={info.description}>
       <span
-        className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs font-extrabold ${styles.badge} ${
+        className={`drink-status-badge inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs font-extrabold ${styles.badge} ${
           compact ? 'whitespace-nowrap' : ''
         }`}
       >
         <span className={`h-1.5 w-1.5 rounded-full ${styles.dot}`} />
         {compact ? info.shortLabel : info.status}
+        <span className="drink-status-tooltip">{statusHints[info.status]}</span>
       </span>
       {showTimeline ? (
         <span className="mt-3 block">

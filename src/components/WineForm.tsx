@@ -99,7 +99,7 @@ function hasValue(value: unknown) {
 
 function SuggestedMark({ show }: { show: boolean }) {
   if (!show) return null;
-  return <span className="ml-2 rounded-md bg-lavender/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-plum">AI suggested</span>;
+  return <span className="ai-suggested-mark" title="AI suggested">AI suggested</span>;
 }
 
 export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
@@ -139,7 +139,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   };
 
   const suggestedClass = (key: SuggestedFormKey) =>
-    suggestedFields.has(key) ? 'border-lavender/70 bg-lavender/10 ring-1 ring-lavender/40' : '';
+    suggestedFields.has(key) ? 'border-lavender/70 bg-lavender/10 ring-1 ring-lavender/40 hover:border-plum/45 hover:bg-lavender/15' : '';
 
   const markSuggested = (keys: SuggestedFormKey[]) => {
     setSuggestedFields((current) => {
@@ -322,7 +322,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
             </div>
           ) : null}
           {autofillResult ? (
-            <div className="mt-4 rounded-lg border border-lavender/30 bg-lavender/10 p-4 text-sm leading-6 text-smoke">
+            <div className="ai-surface mt-4 rounded-lg border border-lavender/30 bg-lavender/10 p-4 text-sm leading-6 text-smoke">
               <p className="font-bold text-ink">AI suggested details — review before saving</p>
               <p className="mt-1">
                 Confidence {Math.round(autofillResult.confidence * 100)}%. {autofillResult.knownVsInferredSummary}
@@ -339,7 +339,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
                   ['Acidity', autofillResult.acidity.value],
                   ['Tannin', autofillResult.tannin.value],
                 ].map(([label, value]) => (
-                  <div key={label} className="rounded-md border border-lavender/20 bg-white/60 px-3 py-2">
+                  <div key={label} className="interactive-surface rounded-md border border-lavender/20 bg-white/60 px-3 py-2 hover:border-lavender/40 hover:bg-white hover:shadow-sm">
                     <span className="block font-bold uppercase tracking-wide text-plum">{label}</span>
                     <span className="mt-1 block text-sm text-ink">{value || 'Unknown'}</span>
                   </div>

@@ -74,22 +74,33 @@ select:focus-visible {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 10px 30px rgba(42, 31, 33, 0.075);
   }
 
+  .interactive-surface {
+    @apply transition duration-300 ease-out;
+  }
+
   .premium-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-plum px-4 py-2 text-sm font-semibold text-white shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:bg-pinot hover:shadow-lift active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-plum px-4 py-2 text-sm font-semibold text-white shadow-subtle transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-pinot hover:shadow-lift active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-subtle;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 30px rgba(96, 64, 104, 0.16);
   }
 
+  .premium-button:hover:not(:disabled) {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.28),
+      0 16px 42px rgba(96, 64, 104, 0.22),
+      0 0 0 1px rgba(185, 142, 69, 0.14);
+  }
+
   .secondary-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md border border-plum/20 bg-porcelain px-4 py-2 text-sm font-semibold text-ink shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-plum/40 hover:bg-white hover:text-plum hover:shadow-subtle active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-plum/20 bg-porcelain px-4 py-2 text-sm font-semibold text-ink shadow-sm transition duration-300 ease-out hover:-translate-y-0.5 hover:border-plum/40 hover:bg-white hover:text-plum hover:shadow-subtle active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 6px 16px rgba(42, 31, 33, 0.05);
   }
 
   .ghost-button {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-plum transition duration-200 hover:bg-lavender/15 active:bg-lavender/20 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-plum transition duration-300 ease-out hover:-translate-y-px hover:bg-lavender/15 hover:text-pinot active:translate-y-0 active:bg-lavender/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
   }
 
   .field {
-    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm transition duration-200 placeholder:text-smoke focus:border-lavender focus:bg-porcelain focus:shadow-subtle;
+    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm transition duration-300 ease-out placeholder:text-smoke hover:border-plum/30 hover:bg-porcelain/80 focus:border-lavender focus:bg-porcelain focus:shadow-subtle;
   }
 
   .field-label {
@@ -97,7 +108,7 @@ select:focus-visible {
   }
 
   .metric-card {
-    @apply relative overflow-hidden rounded-lg border border-[#E7DCCB] bg-porcelain/95 p-5 shadow-subtle transition duration-200 hover:-translate-y-0.5 hover:shadow-lift;
+    @apply interactive-surface relative overflow-hidden rounded-lg border border-[#E7DCCB] bg-porcelain/95 p-5 shadow-subtle hover:-translate-y-0.5 hover:border-gold/40 hover:shadow-lift;
     background:
       linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(248, 242, 232, 0.94)),
       radial-gradient(circle at right top, rgba(185, 162, 197, 0.18), transparent 32%);
@@ -105,7 +116,11 @@ select:focus-visible {
 
   .metric-card::after {
     content: '✦';
-    @apply pointer-events-none absolute right-4 top-3 text-xs text-lavender/50;
+    @apply pointer-events-none absolute right-4 top-3 text-xs text-lavender/50 transition duration-300 ease-out;
+  }
+
+  .metric-card:hover::after {
+    @apply text-gold/70;
   }
 
   .table-th {
@@ -125,7 +140,7 @@ select:focus-visible {
   }
 
   .soft-card {
-    @apply rounded-lg border border-[#E7DCCB] bg-porcelain p-4 shadow-sm;
+    @apply interactive-surface rounded-lg border border-[#E7DCCB] bg-porcelain p-4 shadow-sm hover:-translate-y-0.5 hover:border-gold/35 hover:bg-white hover:shadow-subtle;
   }
 
   .soft-card h3::after {
@@ -134,7 +149,17 @@ select:focus-visible {
   }
 
   .nav-item {
-    @apply flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm font-semibold text-smoke transition duration-200 hover:border-lavender/20 hover:bg-white/70 hover:text-plum;
+    @apply relative flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm font-semibold text-smoke transition duration-300 ease-out hover:translate-x-0.5 hover:border-lavender/20 hover:bg-white/70 hover:text-plum;
+  }
+
+  .nav-item::before {
+    content: '';
+    @apply absolute left-1 top-1/2 h-5 w-0 -translate-y-1/2 rounded-full bg-gold/60 opacity-0 transition-all duration-300 ease-out;
+  }
+
+  .nav-item:hover::before,
+  .nav-item-active::before {
+    @apply w-0.5 opacity-100;
   }
 
   .nav-item-active {
@@ -172,12 +197,16 @@ select:focus-visible {
   }
 
   .priority-card {
-    @apply relative rounded-lg border border-[#E7DCCB] bg-white/85 p-4 shadow-sm;
+    @apply interactive-surface relative rounded-lg border border-[#E7DCCB] bg-white/85 p-4 shadow-sm hover:-translate-y-0.5 hover:border-gold/35 hover:bg-white hover:shadow-subtle;
   }
 
   .priority-card::after {
     content: '✿';
-    @apply pointer-events-none absolute bottom-3 right-4 text-[10px] text-lavender/45;
+    @apply pointer-events-none absolute bottom-3 right-4 text-[10px] text-lavender/45 transition duration-300 ease-out;
+  }
+
+  .priority-card:hover::after {
+    @apply text-gold/65;
   }
 
   .sidebar-note {
@@ -187,6 +216,112 @@ select:focus-visible {
   .sidebar-note::after {
     content: '✿';
     @apply pointer-events-none absolute right-4 top-4 text-xs text-lavender/60;
+  }
+
+  .wine-card {
+    @apply interactive-surface relative overflow-hidden rounded-lg border border-white/70 bg-white shadow-subtle hover:-translate-y-1 hover:border-gold/35 hover:shadow-lift;
+  }
+
+  .wine-card::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0 opacity-0 transition duration-300 ease-out;
+    background:
+      radial-gradient(circle at 20% 8%, rgba(185, 142, 69, 0.14), transparent 24%),
+      linear-gradient(135deg, rgba(185, 162, 197, 0.08), transparent 40%);
+  }
+
+  .wine-card:hover::after {
+    @apply opacity-100;
+  }
+
+  .wine-card .bottle-image-shell img,
+  .wine-card .bottle-placeholder-bottle {
+    @apply transition duration-500 ease-out;
+  }
+
+  .wine-card:hover .bottle-image-shell img {
+    transform: scale(1.035);
+  }
+
+  .wine-card:hover .bottle-placeholder-bottle {
+    transform: translateY(-2px) scale(1.025);
+  }
+
+  .wine-card-peek {
+    @apply transition duration-300 ease-out;
+  }
+
+  .wine-card:hover .wine-card-peek {
+    @apply bg-porcelain shadow-sm;
+  }
+
+  .wine-card-meta {
+    @apply transition duration-300 ease-out;
+  }
+
+  .wine-card:hover .wine-card-meta {
+    @apply text-ink;
+  }
+
+  .drink-status-badge {
+    @apply relative transition duration-300 ease-out hover:-translate-y-px hover:shadow-sm;
+  }
+
+  .drink-status-badge:hover {
+    filter: saturate(1.08) brightness(1.02);
+  }
+
+  .drink-status-tooltip {
+    @apply pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-max max-w-[220px] -translate-x-1/2 rounded-md border border-gold/30 bg-porcelain px-3 py-2 text-[11px] font-semibold leading-4 text-ink opacity-0 shadow-subtle transition duration-300 ease-out sm:block;
+  }
+
+  .drink-status-badge:hover .drink-status-tooltip {
+    @apply translate-y-0 opacity-100;
+  }
+
+  .ai-surface {
+    @apply interactive-surface relative overflow-hidden hover:border-lavender/45 hover:shadow-lift;
+  }
+
+  .ai-surface::after {
+    content: '✦';
+    @apply pointer-events-none absolute right-4 top-4 text-xs text-lavender/0 transition duration-300 ease-out;
+  }
+
+  .ai-surface:hover::after {
+    @apply text-lavender/70;
+  }
+
+  .ai-suggested-mark {
+    @apply relative ml-2 rounded-md bg-lavender/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-plum transition duration-300 ease-out;
+  }
+
+  .ai-suggested-mark:hover {
+    @apply bg-lavender/30 text-pinot shadow-sm;
+  }
+
+  .storage-card {
+    @apply interactive-surface rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm hover:-translate-y-0.5 hover:border-gold/35 hover:bg-white hover:shadow-subtle;
+  }
+
+  .storage-chip {
+    @apply interactive-surface rounded-md border border-ink/10 bg-white px-2 py-2 text-center hover:border-plum/25 hover:bg-paper hover:shadow-sm;
+  }
+
+  .storage-bottle-button {
+    @apply interactive-surface block w-full rounded-md bg-white px-3 py-2 text-left text-sm shadow-sm hover:-translate-y-px hover:bg-linen hover:shadow-subtle;
+  }
+
+  .tasting-note-card {
+    @apply interactive-surface rounded-lg border border-ink/10 bg-white p-4 shadow-sm hover:-translate-y-0.5 hover:border-gold/35 hover:bg-porcelain/80 hover:shadow-subtle;
+  }
+
+  .table-row-hover {
+    @apply transition duration-300 ease-out hover:bg-paper/85;
+  }
+
+  .table-row-hover:hover .table-td {
+    @apply border-gold/20;
   }
 
   .skeleton {
@@ -214,5 +349,34 @@ select:focus-visible {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interactive-surface,
+  .wine-card,
+  .wine-card *,
+  .drink-status-badge,
+  .ai-surface,
+  .nav-item,
+  .premium-button,
+  .secondary-button,
+  .ghost-button,
+  .field {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+  }
+
+  .wine-card:hover,
+  .metric-card:hover,
+  .soft-card:hover,
+  .priority-card:hover,
+  .storage-card:hover,
+  .tasting-note-card:hover,
+  .premium-button:hover,
+  .secondary-button:hover,
+  .ghost-button:hover,
+  .nav-item:hover {
+    transform: none !important;
   }
 }

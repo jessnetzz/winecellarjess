@@ -95,7 +95,7 @@ function PriorityStrip({ title, wines, onSelectWine }: { title: string; wines: W
           wines.slice(0, 4).map((wine) => (
             <button
               key={wine.id}
-              className="group flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-3 py-2 text-left transition hover:border-plum/20 hover:bg-paper"
+              className="interactive-surface group flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-3 py-2 text-left hover:-translate-y-px hover:border-plum/20 hover:bg-paper hover:shadow-sm"
               type="button"
               onClick={() => onSelectWine?.(wine)}
             >

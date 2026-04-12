@@ -62,10 +62,10 @@ export default function CollectionTable({ wines, sort, onSortChange, onSelectWin
           </thead>
           <tbody className="bg-white">
             {wines.map((wine) => (
-              <tr key={wine.id} className="transition hover:bg-paper/85">
+              <tr key={wine.id} className="table-row-hover">
                 <td className="table-td">
                   <button className="text-left" type="button" onClick={() => onSelectWine(wine)}>
-                    <span className="block font-serif text-lg font-bold text-vine transition hover:text-pinot">{wine.name}</span>
+                    <span className="block font-serif text-lg font-bold text-vine transition duration-300 ease-out hover:text-pinot">{wine.name}</span>
                     <span className="mt-1 block text-xs uppercase text-smoke">{wine.appellation}</span>
                   </button>
                 </td>

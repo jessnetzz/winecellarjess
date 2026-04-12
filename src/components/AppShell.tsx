@@ -49,7 +49,7 @@ function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
         </button>
       </nav>
 
-      <div className="sidebar-note mt-10 rounded-lg border border-plum/15 bg-white/75 p-4">
+      <div className="sidebar-note interactive-surface mt-10 rounded-lg border border-plum/15 bg-white/75 p-4 hover:-translate-y-0.5 hover:border-gold/30 hover:bg-white hover:shadow-subtle">
         <p className="section-kicker">Drink windows</p>
         <p className="mt-2 text-sm leading-6 text-smoke">
           Use the dashboard and badges to spot bottles that are at peak, ready now, or slipping past their ideal year.
@@ -102,7 +102,7 @@ function TopNav({
               <Icon name="plus" className="h-4 w-4" />
               Add wine
             </button>
-            <div className="flex items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm">
+            <div className="interactive-surface flex items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm hover:border-lavender/35 hover:bg-white hover:shadow-subtle">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-lavender/20 text-plum">
                 <Icon name="user" className="h-4 w-4" />
               </span>

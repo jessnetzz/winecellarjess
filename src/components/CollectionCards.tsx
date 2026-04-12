@@ -31,9 +31,9 @@ export default function CollectionCards({ wines, onSelectWine, onEditWine }: Col
       {wines.map((wine) => (
         <article
           key={wine.id}
-          className="group overflow-hidden rounded-lg border border-white/70 bg-white shadow-subtle transition duration-300 hover:-translate-y-1 hover:shadow-lift"
+          className="wine-card group"
         >
-          <button className="block w-full text-left" type="button" onClick={() => onSelectWine(wine)}>
+          <button className="relative z-10 block w-full text-left" type="button" onClick={() => onSelectWine(wine)}>
             <div className="grid grid-cols-[132px_minmax(0,1fr)] gap-4 p-4">
               <BottleImage imageUrl={wine.imageUrl} name={wine.name} producer={wine.producer} vintage={wine.vintage} />
               <div className="min-w-0">
@@ -44,16 +44,16 @@ export default function CollectionCards({ wines, onSelectWine, onEditWine }: Col
                 <h3 className="mt-3 line-clamp-2 font-serif text-2xl font-bold leading-tight text-ink group-hover:text-vine">
                   {wine.name}
                 </h3>
-                <p className="mt-2 truncate text-sm font-semibold text-smoke">
+                <p className="wine-card-meta mt-2 truncate text-sm font-semibold text-smoke">
                   {wine.producer} · {wine.vintage}
                 </p>
-                <p className="mt-1 truncate text-sm text-smoke">{wine.region}, {wine.country}</p>
+                <p className="wine-card-meta mt-1 truncate text-sm text-smoke">{wine.region}, {wine.country}</p>
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-md bg-paper px-3 py-2">
+                  <div className="wine-card-peek rounded-md bg-paper px-3 py-2">
                     <span className="block field-label">Qty</span>
                     <span className="font-bold text-ink">{wine.quantity}</span>
                   </div>
-                  <div className="rounded-md bg-paper px-3 py-2">
+                  <div className="wine-card-peek rounded-md bg-paper px-3 py-2">
                     <span className="block field-label">Rating</span>
                     <span className="font-bold text-ink">{formatRating(wine.personalRating)}</span>
                   </div>
@@ -61,12 +61,12 @@ export default function CollectionCards({ wines, onSelectWine, onEditWine }: Col
               </div>
             </div>
           </button>
-          <div className="flex items-center justify-between gap-3 border-t border-ink/10 bg-porcelain px-4 py-3">
+          <div className="relative z-10 flex items-center justify-between gap-3 border-t border-ink/10 bg-porcelain px-4 py-3 transition duration-300 ease-out group-hover:bg-white/90">
             <span className="truncate text-xs font-semibold text-smoke">
               {wine.storageLocation.displayName} · {formatCurrency(wine.marketValue)}
             </span>
             <button
-              className="rounded-md px-3 py-1.5 text-xs font-bold text-vine opacity-100 transition hover:bg-vine/10 sm:opacity-0 sm:group-hover:opacity-100"
+              className="ghost-button px-3 py-1.5 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
               type="button"
               onClick={() => onEditWine(wine)}
             >

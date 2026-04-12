@@ -12,7 +12,7 @@ interface BottleImageProps {
 function PlaceholderLabel({ name, producer, vintage }: Pick<BottleImageProps, 'name' | 'producer' | 'vintage'>) {
   return (
     <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-porcelain via-white to-fog p-3">
-      <div className="relative h-40 w-16 rounded-b-md rounded-t-full bg-gradient-to-b from-[#35292D] to-vine shadow-cellar">
+      <div className="bottle-placeholder-bottle relative h-40 w-16 rounded-b-md rounded-t-full bg-gradient-to-b from-[#35292D] to-vine shadow-cellar">
         <div className="absolute left-1/2 top-1 h-8 w-6 -translate-x-1/2 rounded-t-md bg-[#2B2226]" />
         <div className="absolute inset-x-2 bottom-6 rounded-sm bg-porcelain px-1 py-3 text-center shadow-subtle">
           <div className="font-serif text-[10px] font-bold uppercase leading-tight text-vine">{producer || 'Cellar'}</div>
@@ -45,10 +45,10 @@ export default function BottleImage({
   };
 
   return (
-    <div className="overflow-hidden rounded-lg border border-ink/10 bg-white shadow-sm">
+    <div className="bottle-image-shell overflow-hidden rounded-lg border border-ink/10 bg-white shadow-sm">
       <div className="aspect-[4/5]">
         {imageUrl ? (
-          <img className="h-full w-full object-cover transition duration-300 hover:scale-[1.03]" src={imageUrl} alt={`${producer} ${name} ${vintage} bottle label`} />
+          <img className="h-full w-full object-cover transition duration-500 ease-out hover:scale-[1.03]" src={imageUrl} alt={`${producer} ${name} ${vintage} bottle label`} />
         ) : (
           <PlaceholderLabel name={name} producer={producer} vintage={vintage} />
         )}

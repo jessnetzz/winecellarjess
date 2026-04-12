@@ -49,7 +49,7 @@ export default function TastingJournal({ wine, onAddTastingEntry }: TastingJourn
         <p className="text-sm text-smoke">{wine.tastingLog.length} logged tasting{wine.tastingLog.length === 1 ? '' : 's'}</p>
       </div>
 
-      <form className="mt-5 rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm" onSubmit={addEntry}>
+      <form className="interactive-surface mt-5 rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm hover:border-gold/25 hover:shadow-subtle" onSubmit={addEntry}>
         <div className="grid gap-4 md:grid-cols-3">
           <label>
             <span className="field-label">Date</span>
@@ -117,7 +117,7 @@ export default function TastingJournal({ wine, onAddTastingEntry }: TastingJourn
 
       <div className="mt-5 space-y-4">
         {wine.tastingLog.map((log) => (
-          <article key={log.id} className="rounded-lg border border-ink/10 bg-white p-4 shadow-sm">
+          <article key={log.id} className="tasting-note-card">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="font-bold text-ink">{log.tastingDate}</p>

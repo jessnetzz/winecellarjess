@@ -11,7 +11,7 @@ interface CellarPrioritiesProps {
 function PriorityWine({ wine, onSelectWine }: { wine: Wine; onSelectWine: (wine: Wine) => void }) {
   return (
     <button
-      className="w-full rounded-lg border border-ink/10 bg-white p-4 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-vine/30 hover:shadow-lift"
+      className="interactive-surface w-full rounded-lg border border-ink/10 bg-white p-4 text-left shadow-sm hover:-translate-y-0.5 hover:border-vine/30 hover:bg-porcelain/80 hover:shadow-lift"
       type="button"
       onClick={() => onSelectWine(wine)}
     >

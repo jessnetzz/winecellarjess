@@ -26,10 +26,10 @@ export default function StorageLocationView({ wines, onSelectWine }: StorageLoca
         {Object.entries(groups)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([location, locationWines]) => (
-            <div key={location} className="rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm">
+            <div key={location} className="storage-card group">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-vine/10 text-vine">
+                  <span className="interactive-surface flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-vine/10 text-vine group-hover:bg-vine/15">
                     <Icon name="cellar" className="h-5 w-5" />
                   </span>
                   <h3 className="truncate font-bold text-ink">{location}</h3>
@@ -40,7 +40,7 @@ export default function StorageLocationView({ wines, onSelectWine }: StorageLoca
               </div>
               <div className="mt-4 grid grid-cols-3 gap-2">
                 {['Rack', 'Shelf', 'Bin'].map((label) => (
-                  <div key={label} className="rounded-md border border-ink/10 bg-white px-2 py-2 text-center">
+                  <div key={label} className="storage-chip">
                     <span className="block text-[10px] font-bold uppercase tracking-wide text-smoke">{label}</span>
                     <span className="mt-1 block truncate text-xs font-bold text-vine">{location.includes(label) ? location : '-'}</span>
                   </div>
@@ -50,7 +50,7 @@ export default function StorageLocationView({ wines, onSelectWine }: StorageLoca
                 {locationWines.map((wine) => (
                   <button
                     key={wine.id}
-                    className="block w-full rounded-md bg-white px-3 py-2 text-left text-sm shadow-sm transition hover:bg-linen"
+                    className="storage-bottle-button"
                     type="button"
                     onClick={() => onSelectWine(wine)}
                   >

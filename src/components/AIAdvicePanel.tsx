@@ -32,7 +32,7 @@ export default function AIAdvicePanel({ wine, onApplyAdvice }: AIAdvicePanelProp
   };
 
   return (
-    <section className="overflow-hidden rounded-lg border border-vine/15 bg-white shadow-subtle">
+    <section className="ai-surface overflow-hidden rounded-lg border border-vine/15 bg-white shadow-subtle">
       <div className="border-b border-vine/10 bg-gradient-to-r from-vine to-pinot px-5 py-4 text-white">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
