@@ -1,8 +1,7 @@
 import { User } from '@supabase/supabase-js';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import AppShell from './components/AppShell';
 import AuthScreen from './components/AuthScreen';
-import BottleDropCelebration from './components/BottleDropCelebration';
 import CellarPriorities from './components/CellarPriorities';
 import CollectionCards from './components/CollectionCards';
 import CollectionTable from './components/CollectionTable';
@@ -155,43 +154,16 @@ function AuthenticatedCellar({ user }: { user: User }) {
   const [editingWine, setEditingWine] = useState<Wine | undefined>();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Wine | null>(null);
-  const [cellarDropWine, setCellarDropWine] = useState<Wine | null>(null);
-  const [highlightedWineId, setHighlightedWineId] = useState<string | null>(null);
-  const detailRevealTimerRef = useRef<number | null>(null);
 
   const filteredWines = useMemo(() => applySort(applyFilters(wines, filters), sort), [wines, filters, sort]);
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
 
-  useEffect(() => {
-    if (!highlightedWineId) return undefined;
-
-    const timer = window.setTimeout(() => setHighlightedWineId(null), 2800);
-    return () => window.clearTimeout(timer);
-  }, [highlightedWineId]);
-
-  useEffect(() => () => {
-    if (detailRevealTimerRef.current) window.clearTimeout(detailRevealTimerRef.current);
-  }, []);
-
   const upsertWine = async (wine: Wine) => {
-    const isNewWine = !editingWine;
     const saved = await saveWine(wine);
     if (!saved) return;
 
     setIsFormOpen(false);
     setEditingWine(undefined);
-
-    if (isNewWine) {
-      setSelectedWineId(null);
-      setCellarDropWine(saved);
-      setHighlightedWineId(saved.id);
-      if (detailRevealTimerRef.current) window.clearTimeout(detailRevealTimerRef.current);
-      detailRevealTimerRef.current = window.setTimeout(() => {
-        setSelectedWineId(saved.id);
-      }, 1300);
-      return;
-    }
-
     setSelectedWineId(saved.id);
   };
 
@@ -310,17 +282,11 @@ function AuthenticatedCellar({ user }: { user: User }) {
                 </p>
               </div>
               {viewMode === 'cards' ? (
-                <CollectionCards
-                  wines={filteredWines}
-                  highlightedWineId={highlightedWineId}
-                  onSelectWine={(wine) => setSelectedWineId(wine.id)}
-                  onEditWine={openEdit}
-                />
+                <CollectionCards wines={filteredWines} onSelectWine={(wine) => setSelectedWineId(wine.id)} onEditWine={openEdit} />
               ) : (
                 <CollectionTable
                   wines={filteredWines}
                   sort={sort}
-                  highlightedWineId={highlightedWineId}
                   onSortChange={setSort}
                   onSelectWine={(wine) => setSelectedWineId(wine.id)}
                   onEditWine={openEdit}
@@ -363,10 +329,6 @@ function AuthenticatedCellar({ user }: { user: User }) {
           onSave={(wine) => void upsertWine(wine)}
         />
       </Modal>
-
-      {cellarDropWine ? (
-        <BottleDropCelebration wine={cellarDropWine} onDone={() => setCellarDropWine(null)} />
-      ) : null}
 
       <Modal
         title={selectedWine ? `${selectedWine.vintage} ${selectedWine.name}` : 'Wine detail'}

@@ -6,12 +6,11 @@ import { formatCurrency, formatRating } from '../utils/formatters';
 
 interface CollectionCardsProps {
   wines: Wine[];
-  highlightedWineId?: string | null;
   onSelectWine: (wine: Wine) => void;
   onEditWine: (wine: Wine) => void;
 }
 
-export default function CollectionCards({ wines, highlightedWineId, onSelectWine, onEditWine }: CollectionCardsProps) {
+export default function CollectionCards({ wines, onSelectWine, onEditWine }: CollectionCardsProps) {
   if (!wines.length) {
     return (
       <section className="panel p-10 text-center">
@@ -32,9 +31,7 @@ export default function CollectionCards({ wines, highlightedWineId, onSelectWine
       {wines.map((wine) => (
         <article
           key={wine.id}
-          className={`group overflow-hidden rounded-lg border bg-white shadow-subtle transition duration-300 hover:-translate-y-1 hover:shadow-lift ${
-            highlightedWineId === wine.id ? 'cellar-new-highlight border-gold/70' : 'border-white/70'
-          }`}
+          className="group overflow-hidden rounded-lg border border-white/70 bg-white shadow-subtle transition duration-300 hover:-translate-y-1 hover:shadow-lift"
         >
           <button className="block w-full text-left" type="button" onClick={() => onSelectWine(wine)}>
             <div className="grid grid-cols-[132px_minmax(0,1fr)] gap-4 p-4">

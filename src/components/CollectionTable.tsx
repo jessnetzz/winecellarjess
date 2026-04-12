@@ -5,7 +5,6 @@ import { formatCurrency, formatRating } from '../utils/formatters';
 interface CollectionTableProps {
   wines: Wine[];
   sort: SortConfig;
-  highlightedWineId?: string | null;
   onSortChange: (sort: SortConfig) => void;
   onSelectWine: (wine: Wine) => void;
   onEditWine: (wine: Wine) => void;
@@ -24,7 +23,7 @@ const columns: Array<{ label: string; key?: WineSortKey }> = [
   { label: 'Actions' },
 ];
 
-export default function CollectionTable({ wines, sort, highlightedWineId, onSortChange, onSelectWine, onEditWine }: CollectionTableProps) {
+export default function CollectionTable({ wines, sort, onSortChange, onSelectWine, onEditWine }: CollectionTableProps) {
   const toggleSort = (key: WineSortKey) => {
     onSortChange({
       key,
@@ -63,7 +62,7 @@ export default function CollectionTable({ wines, sort, highlightedWineId, onSort
           </thead>
           <tbody className="bg-white">
             {wines.map((wine) => (
-              <tr key={wine.id} className={`transition hover:bg-paper/85 ${highlightedWineId === wine.id ? 'cellar-new-row' : ''}`}>
+              <tr key={wine.id} className="transition hover:bg-paper/85">
                 <td className="table-td">
                   <button className="text-left" type="button" onClick={() => onSelectWine(wine)}>
                     <span className="block font-serif text-lg font-bold text-vine transition hover:text-pinot">{wine.name}</span>
