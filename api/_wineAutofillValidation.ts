@@ -1,4 +1,4 @@
-import type { WineAutofillRequest } from './_wineAutofillPrompt.js';
+import { WineAutofillRequest } from './_wineAutofillPrompt';
 
 export interface WineAutofillApiResult {
   producer: string | null;
