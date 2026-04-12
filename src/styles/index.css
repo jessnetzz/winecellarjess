@@ -166,6 +166,22 @@ select:focus-visible {
     @apply border-lavender/25 bg-white/85 text-plum shadow-sm;
   }
 
+  .mobile-nav-item {
+    @apply flex min-h-14 flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-[10px] font-extrabold uppercase tracking-wide text-smoke transition duration-300 ease-out hover:bg-white hover:text-plum active:scale-[0.98];
+  }
+
+  .mobile-nav-add {
+    @apply -mt-6 min-h-16 rounded-lg border border-white/30 bg-plum text-white shadow-lift hover:bg-pinot hover:text-white;
+  }
+
+  .filter-chip {
+    @apply inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-plum/15 bg-white/80 px-4 py-2 text-sm font-bold text-smoke shadow-sm transition duration-300 ease-out hover:-translate-y-px hover:border-plum/30 hover:bg-white hover:text-plum;
+  }
+
+  .filter-chip-active {
+    @apply border-plum/35 bg-plum text-white shadow-subtle hover:bg-pinot hover:text-white;
+  }
+
   .whimsy-hero {
     @apply relative overflow-hidden bg-porcelain/90;
     background:

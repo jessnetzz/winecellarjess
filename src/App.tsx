@@ -203,8 +203,8 @@ function AuthenticatedCellar({ user }: { user: User }) {
       onSignOut={() => void authService.signOut()}
       onToggleView={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
     >
-      <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
-        <section className="whimsy-hero grid gap-6 rounded-lg border border-[#E7DCCB] p-6 shadow-subtle lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
+      <main className="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
+        <section className="whimsy-hero grid gap-6 rounded-lg border border-[#E7DCCB] p-5 shadow-subtle sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
           <div>
             <p className="section-kicker">Private cellar</p>
             <h1 className="mt-3 max-w-4xl font-liam text-5xl font-normal leading-tight text-ink sm:text-6xl">
@@ -266,7 +266,9 @@ function AuthenticatedCellar({ user }: { user: User }) {
             <section id="dashboard" className="scroll-mt-32">
               <Dashboard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
             </section>
-            <CellarPriorities wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+            <section id="drink-now" className="scroll-mt-32">
+              <CellarPriorities wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+            </section>
             <FiltersPanel filters={filters} sort={sort} wines={wines} onFiltersChange={setFilters} onSortChange={setSort} />
 
             <section id="collection" className="scroll-mt-32">
@@ -281,17 +283,20 @@ function AuthenticatedCellar({ user }: { user: User }) {
                   Sorted by {sort.key} {sort.direction === 'asc' ? 'ascending' : 'descending'}
                 </p>
               </div>
-              {viewMode === 'cards' ? (
+              <div className={viewMode === 'cards' ? '' : 'lg:hidden'}>
                 <CollectionCards wines={filteredWines} onSelectWine={(wine) => setSelectedWineId(wine.id)} onEditWine={openEdit} />
-              ) : (
-                <CollectionTable
-                  wines={filteredWines}
-                  sort={sort}
-                  onSortChange={setSort}
-                  onSelectWine={(wine) => setSelectedWineId(wine.id)}
-                  onEditWine={openEdit}
-                />
-              )}
+              </div>
+              {viewMode === 'table' ? (
+                <div className="hidden lg:block">
+                  <CollectionTable
+                    wines={filteredWines}
+                    sort={sort}
+                    onSortChange={setSort}
+                    onSelectWine={(wine) => setSelectedWineId(wine.id)}
+                    onEditWine={openEdit}
+                  />
+                </div>
+              ) : null}
             </section>
 
             <section id="storage" className="scroll-mt-32">

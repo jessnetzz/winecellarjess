@@ -23,9 +23,17 @@ const navItems: Array<{ label: string; href: string; icon: IconName }> = [
   { label: 'Settings', href: '#settings', icon: 'settings' },
 ];
 
+const mobileNavItems: Array<{ label: string; href?: string; icon: IconName; action?: 'create' }> = [
+  { label: 'Home', href: '#dashboard', icon: 'dashboard' },
+  { label: 'Collection', href: '#collection', icon: 'collection' },
+  { label: 'Add', icon: 'plus', action: 'create' },
+  { label: 'Drink Now', href: '#drink-now', icon: 'glass' },
+  { label: 'Settings', href: '#settings', icon: 'user' },
+];
+
 function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
   return (
-    <aside className="hidden min-h-screen w-72 shrink-0 border-r border-[#E7DCCB] bg-porcelain/90 px-4 py-5 backdrop-blur xl:sticky xl:top-0 xl:block">
+    <aside className="hidden min-h-screen w-72 shrink-0 border-r border-[#E7DCCB] bg-porcelain/90 px-4 py-5 backdrop-blur lg:sticky lg:top-0 lg:block">
       <div className="flex items-center gap-3 px-2">
         <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-plum text-white shadow-subtle">
           <Icon name="glass" className="h-6 w-6" />
@@ -71,10 +79,10 @@ function TopNav({
   onToggleView,
 }: Omit<AppShellProps, 'children'>) {
   return (
-    <header className="sticky top-0 z-30 border-b border-[#E7DCCB] bg-paper/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-[#E7DCCB] bg-paper/95 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="xl:hidden">
+          <div className="lg:hidden">
             <p className="section-kicker">Private cellar</p>
             <h1 className="mt-1 font-serif text-3xl font-bold leading-tight text-ink">Wine Cellar</h1>
           </div>
@@ -83,7 +91,7 @@ function TopNav({
             <span className="sr-only">Search cellar</span>
             <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-smoke" />
             <input
-              className="field h-11 bg-white/95 pl-11"
+              className="field h-12 bg-white/95 pl-11 text-base sm:h-11 sm:text-sm"
               type="search"
               placeholder="Search wine, producer, region, grape, notes..."
               value={query}
@@ -92,17 +100,20 @@ function TopNav({
           </label>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button className="secondary-button" type="button" onClick={onToggleView}>
+            <button className="secondary-button hidden sm:inline-flex" type="button" onClick={onToggleView}>
               {viewMode === 'cards' ? 'Table view' : 'Gallery view'}
             </button>
-            <button className="secondary-button" type="button" onClick={onRefresh} disabled={isBusy}>
+            <button className="secondary-button hidden sm:inline-flex" type="button" onClick={onRefresh} disabled={isBusy}>
               Refresh
             </button>
-            <button className="premium-button" type="button" onClick={onCreateWine} disabled={isBusy}>
+            <button className="premium-button hidden sm:inline-flex" type="button" onClick={onCreateWine} disabled={isBusy}>
               <Icon name="plus" className="h-4 w-4" />
               Add wine
             </button>
-            <div className="interactive-surface flex items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm hover:border-lavender/35 hover:bg-white hover:shadow-subtle">
+            <button className="secondary-button sm:hidden" type="button" onClick={onRefresh} disabled={isBusy}>
+              Refresh
+            </button>
+            <div className="interactive-surface hidden items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm hover:border-lavender/35 hover:bg-white hover:shadow-subtle sm:flex">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-lavender/20 text-plum">
                 <Icon name="user" className="h-4 w-4" />
               </span>
@@ -113,17 +124,39 @@ function TopNav({
             </button>
           </div>
         </div>
-
-        <nav className="flex gap-2 overflow-x-auto pb-1 xl:hidden" aria-label="Mobile navigation">
-          {navItems.map((item) => (
-            <a key={item.href} className="nav-item shrink-0 bg-white/70" href={item.href}>
-              <Icon name={item.icon} className="h-4 w-4" />
-              {item.label}
-            </a>
-          ))}
-        </nav>
       </div>
     </header>
+  );
+}
+
+function BottomNav({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
+  return (
+    <nav className="fixed inset-x-3 bottom-3 z-40 rounded-lg border border-[#E7DCCB] bg-porcelain/95 px-2 py-2 shadow-cellar backdrop-blur-xl lg:hidden" aria-label="Mobile primary navigation">
+      <div className="grid grid-cols-5 items-center gap-1">
+        {mobileNavItems.map((item) => {
+          const baseClass =
+            item.action === 'create'
+              ? 'mobile-nav-item mobile-nav-add'
+              : 'mobile-nav-item';
+          const content = (
+            <>
+              <Icon name={item.icon} className="h-5 w-5" />
+              <span>{item.label}</span>
+            </>
+          );
+
+          return item.action === 'create' ? (
+            <button key={item.label} className={baseClass} type="button" onClick={onCreateWine}>
+              {content}
+            </button>
+          ) : (
+            <a key={item.href} className={baseClass} href={item.href}>
+              {content}
+            </a>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
@@ -131,10 +164,11 @@ export default function AppShell(props: AppShellProps) {
   return (
     <div className="app-shell flex">
       <Sidebar onCreateWine={props.onCreateWine} />
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 flex-1 pb-24 lg:pb-0">
         <TopNav {...props} />
         {props.children}
       </div>
+      <BottomNav onCreateWine={props.onCreateWine} />
     </div>
   );
 }

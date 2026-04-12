@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { DrinkabilityStatus, SortConfig, Wine, WineFilters, WineSortKey, WineStatus, WineStyle } from '../types/wine';
 
 interface FiltersPanelProps {
@@ -34,41 +35,54 @@ function uniqueValues(wines: Wine[], getValue: (wine: Wine) => string) {
   return Array.from(new Set(wines.map(getValue).filter(Boolean))).sort();
 }
 
+function blankFilters(): WineFilters {
+  return {
+    query: '',
+    style: 'all',
+    country: '',
+    region: '',
+    status: 'all',
+    rating: '',
+    vintage: '',
+    drinkability: 'all',
+    storage: '',
+  };
+}
+
 export default function FiltersPanel({ filters, sort, wines, onFiltersChange, onSortChange }: FiltersPanelProps) {
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const countries = uniqueValues(wines, (wine) => wine.country);
   const regions = uniqueValues(wines, (wine) => wine.region);
   const storageLocations = uniqueValues(wines, (wine) => wine.storageLocation.displayName);
 
   const update = (patch: Partial<WineFilters>) => onFiltersChange({ ...filters, ...patch });
+  const clearFilters = () => onFiltersChange(blankFilters());
+  const activeFilterCount = useMemo(
+    () =>
+      [
+        filters.query.trim(),
+        filters.style !== 'all',
+        filters.country,
+        filters.region,
+        filters.status !== 'all',
+        filters.rating,
+        filters.vintage,
+        filters.drinkability !== 'all',
+        filters.storage,
+      ].filter(Boolean).length,
+    [filters],
+  );
 
-  return (
-    <section className="panel p-5">
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="section-kicker">Filters</p>
-          <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Refine the cellar</h2>
-        </div>
-        <button
-          className="ghost-button"
-          type="button"
-          onClick={() =>
-            onFiltersChange({
-              query: '',
-              style: 'all',
-              country: '',
-              region: '',
-              status: 'all',
-              rating: '',
-              vintage: '',
-              drinkability: 'all',
-              storage: '',
-            })
-          }
-        >
-          Clear filters
-        </button>
-      </div>
-      <div className="flex flex-col gap-4 lg:flex-row">
+  const quickDrinkOptions: Array<{ label: string; value: WineFilters['drinkability'] }> = [
+    { label: 'All', value: 'all' },
+    { label: 'Ready', value: 'Ready to drink' },
+    { label: 'Peak', value: 'Peak window' },
+    { label: 'Drink soon', value: 'Nearing end of peak' },
+  ];
+
+  const FilterFields = ({ compact = false }: { compact?: boolean }) => (
+    <>
+      <div className={compact ? 'grid gap-4' : 'flex flex-col gap-4 lg:flex-row'}>
         <label className="flex-1">
           <span className="field-label">Search cellar</span>
           <input
@@ -79,7 +93,7 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
             onChange={(event) => update({ query: event.target.value })}
           />
         </label>
-        <label className="lg:w-48">
+        <label className={compact ? '' : 'lg:w-48'}>
           <span className="field-label">Sort</span>
           <select
             className="field mt-2"
@@ -93,7 +107,7 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
             ))}
           </select>
         </label>
-        <label className="lg:w-36">
+        <label className={compact ? '' : 'lg:w-36'}>
           <span className="field-label">Direction</span>
           <select
             className="field mt-2"
@@ -106,7 +120,7 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
         </label>
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+      <div className={compact ? 'mt-5 grid gap-4' : 'mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8'}>
         <label>
           <span className="field-label">Style</span>
           <select className="field mt-2" value={filters.style} onChange={(event) => update({ style: event.target.value as WineStyle | 'all' })}>
@@ -195,6 +209,75 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
           </select>
         </label>
       </div>
+    </>
+  );
+
+  return (
+    <section className="panel p-5">
+      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="section-kicker">Filters</p>
+          <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Refine the cellar</h2>
+        </div>
+        <button
+          className="ghost-button"
+          type="button"
+          onClick={clearFilters}
+        >
+          Clear filters
+        </button>
+      </div>
+
+      <div className="lg:hidden">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {quickDrinkOptions.map((option) => (
+            <button
+              key={option.value}
+              className={`filter-chip ${filters.drinkability === option.value ? 'filter-chip-active' : ''}`}
+              type="button"
+              onClick={() => update({ drinkability: option.value })}
+            >
+              {option.label}
+            </button>
+          ))}
+          <button className={`filter-chip ${filters.style === 'red' ? 'filter-chip-active' : ''}`} type="button" onClick={() => update({ style: filters.style === 'red' ? 'all' : 'red' })}>
+            Reds
+          </button>
+          <button className={`filter-chip ${filters.style === 'white' ? 'filter-chip-active' : ''}`} type="button" onClick={() => update({ style: filters.style === 'white' ? 'all' : 'white' })}>
+            Whites
+          </button>
+        </div>
+        <button className="secondary-button mt-2 w-full justify-between" type="button" onClick={() => setIsMobileFiltersOpen(true)}>
+          Advanced filters
+          <span className="rounded-md bg-plum/10 px-2 py-0.5 text-xs text-plum">{activeFilterCount}</span>
+        </button>
+      </div>
+
+      <div className="hidden lg:block">
+        <FilterFields />
+      </div>
+
+      {isMobileFiltersOpen ? (
+        <div className="fixed inset-0 z-50 bg-ink/55 p-3 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true" aria-label="Advanced filters">
+          <div className="ml-auto flex max-h-[calc(100vh-1.5rem)] w-full max-w-md flex-col overflow-hidden rounded-lg border border-[#E7DCCB] bg-porcelain shadow-cellar">
+            <div className="flex items-start justify-between gap-3 border-b border-ink/10 px-4 py-4">
+              <div>
+                <p className="section-kicker">Advanced filters</p>
+                <h3 className="mt-1 font-serif text-2xl font-bold text-ink">Refine the cellar</h3>
+              </div>
+              <button className="ghost-button" type="button" onClick={() => setIsMobileFiltersOpen(false)}>
+                Done
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4">
+              <FilterFields compact />
+              <button className="secondary-button mt-5 w-full" type="button" onClick={clearFilters}>
+                Clear filters
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -34,7 +34,7 @@ export default function CollectionCards({ wines, onSelectWine, onEditWine }: Col
           className="wine-card group"
         >
           <button className="relative z-10 block w-full text-left" type="button" onClick={() => onSelectWine(wine)}>
-            <div className="grid grid-cols-[132px_minmax(0,1fr)] gap-4 p-4">
+            <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-4 p-4 sm:grid-cols-[132px_minmax(0,1fr)]">
               <BottleImage imageUrl={wine.imageUrl} name={wine.name} producer={wine.producer} vintage={wine.vintage} />
               <div className="min-w-0">
                 <div className="flex items-start justify-between gap-2">
@@ -66,7 +66,7 @@ export default function CollectionCards({ wines, onSelectWine, onEditWine }: Col
               {wine.storageLocation.displayName} · {formatCurrency(wine.marketValue)}
             </span>
             <button
-              className="ghost-button px-3 py-1.5 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+              className="ghost-button min-h-10 px-3 py-1.5 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
               type="button"
               onClick={() => onEditWine(wine)}
             >
