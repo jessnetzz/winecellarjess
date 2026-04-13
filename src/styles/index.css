@@ -100,7 +100,7 @@ select:focus-visible {
   }
 
   .field {
-    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm transition duration-300 ease-out placeholder:text-smoke hover:border-plum/30 hover:bg-porcelain/80 focus:border-lavender focus:bg-porcelain focus:shadow-subtle;
+    @apply min-h-12 w-full rounded-md border border-ink/15 bg-white px-3 py-3 text-base text-ink shadow-sm transition duration-300 ease-out placeholder:text-smoke hover:border-plum/30 hover:bg-porcelain/80 focus:border-lavender focus:bg-porcelain focus:shadow-subtle sm:min-h-11 sm:py-2 sm:text-sm;
   }
 
   .field-label {
@@ -180,6 +180,31 @@ select:focus-visible {
 
   .filter-chip-active {
     @apply border-plum/35 bg-plum text-white shadow-subtle hover:bg-pinot hover:text-white;
+  }
+
+  .wine-form-step-panel {
+    @apply rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm sm:p-5;
+  }
+
+  .wine-step-dot {
+    @apply flex min-h-10 items-center justify-center rounded-md border border-plum/15 bg-white/75 text-xs font-extrabold text-smoke shadow-sm transition duration-300 ease-out active:scale-[0.98];
+  }
+
+  .wine-step-dot-active {
+    @apply border-plum/35 bg-plum text-white shadow-subtle;
+  }
+
+  .cellar-stats-scroll {
+    @apply -mx-1 flex gap-3 overflow-x-auto px-1 pb-2 sm:flex-wrap sm:overflow-visible sm:pb-0;
+    scrollbar-width: none;
+  }
+
+  .cellar-stats-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cellar-stat-card {
+    @apply interactive-surface flex min-w-[190px] max-w-[230px] shrink-0 items-center gap-3 rounded-lg border px-4 py-3 text-sm font-semibold leading-5 text-ink shadow-sm hover:-translate-y-0.5 hover:bg-white/80 hover:shadow-subtle;
   }
 
   .whimsy-hero {

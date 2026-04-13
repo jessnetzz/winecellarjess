@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import AppShell from './components/AppShell';
 import AuthScreen from './components/AuthScreen';
 import CellarPriorities from './components/CellarPriorities';
+import CellarStats from './components/CellarStats';
 import CollectionCards from './components/CollectionCards';
 import CollectionTable from './components/CollectionTable';
 import Dashboard from './components/Dashboard';
@@ -210,6 +211,7 @@ function AuthenticatedCellar({ user }: { user: User }) {
             <h1 className="mt-3 max-w-4xl font-liam text-5xl font-normal leading-tight text-ink sm:text-6xl">
               Your collection, in one place—drink windows, tasting notes, and cellar value, thoughtfully kept.
             </h1>
+            <CellarStats wines={wines} />
             <p className="mt-5 max-w-3xl text-base leading-7 text-smoke">
               Track bottles, spot what is at peak, and keep your Supabase-backed collection in sync across your devices.
             </p>

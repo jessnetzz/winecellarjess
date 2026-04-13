@@ -1,4 +1,5 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import BottleImage from './BottleImage';
 import { Wine, WineAutofillResult, WineFormData, WineStatus, WineStyle } from '../types/wine';
 import { aiWineAutofillService } from '../services/aiWineAutofillService';
@@ -102,6 +103,40 @@ function SuggestedMark({ show }: { show: boolean }) {
   return <span className="ai-suggested-mark" title="AI suggested">AI suggested</span>;
 }
 
+type WineFormStep = 'basic' | 'details' | 'window' | 'notes' | 'review';
+
+const wineFormSteps: Array<{ id: WineFormStep; label: string }> = [
+  { id: 'basic', label: 'Basic' },
+  { id: 'details', label: 'Details' },
+  { id: 'window', label: 'Window' },
+  { id: 'notes', label: 'Notes' },
+  { id: 'review', label: 'Review' },
+];
+
+interface StepSectionProps {
+  step: WineFormStep;
+  activeStep: WineFormStep;
+  kicker: string;
+  title: string;
+  description?: string;
+  children: ReactNode;
+}
+
+function StepSection({ step, activeStep, kicker, title, description, children }: StepSectionProps) {
+  const isActive = step === activeStep;
+
+  return (
+    <section className={`wine-form-step-panel ${isActive ? 'block' : 'hidden'} lg:block`}>
+      <div>
+        <p className="section-kicker">{kicker}</p>
+        <h3 className="mt-2 font-serif text-2xl font-bold text-ink">{title}</h3>
+        {description ? <p className="mt-2 max-w-2xl text-sm leading-6 text-smoke">{description}</p> : null}
+      </div>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
 export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   const [form, setForm] = useState<WineFormData>(() => (wine ? { ...wine } : defaultFormData()));
   const [errors, setErrors] = useState<string[]>([]);
@@ -109,11 +144,19 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   const [autofillResult, setAutofillResult] = useState<WineAutofillResult | null>(null);
   const [autofillError, setAutofillError] = useState<string | null>(null);
   const [isAutofilling, setIsAutofilling] = useState(false);
+  const [activeStep, setActiveStep] = useState<WineFormStep>('basic');
   const isEditing = Boolean(wine);
 
   const previewName = useMemo(() => form.name || 'New cellar bottle', [form.name]);
   const canAutofill = Boolean(form.producer.trim() && form.name.trim() && form.vintage && form.vintage >= 1800);
   const defaultData = useMemo(() => defaultFormData(), []);
+  const activeStepIndex = wineFormSteps.findIndex((step) => step.id === activeStep);
+  const isLastStep = activeStep === 'review';
+
+  const goToStep = (direction: 1 | -1) => {
+    const nextStep = wineFormSteps[Math.min(wineFormSteps.length - 1, Math.max(0, activeStepIndex + direction))];
+    if (nextStep) setActiveStep(nextStep.id);
+  };
 
   const update = <K extends keyof WineFormData>(key: K, value: WineFormData[K]) => {
     if (suggestedFields.has(key as SuggestedFormKey)) {
@@ -238,6 +281,13 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
 
     if (validationErrors.length) {
       setErrors(validationErrors);
+      if (validationErrors.some((error) => error.includes('Wine name') || error.includes('Producer') || error.includes('Vintage'))) {
+        setActiveStep('basic');
+      } else if (validationErrors.some((error) => error.includes('Drink window'))) {
+        setActiveStep('window');
+      } else {
+        setActiveStep('details');
+      }
       return;
     }
 
@@ -275,8 +325,8 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   };
 
   return (
-    <form className="grid gap-6 p-5 lg:grid-cols-[260px_minmax(0,1fr)]" onSubmit={submit}>
-      <div className="space-y-4">
+    <form className="grid gap-5 p-4 pb-0 sm:p-5 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6 lg:pb-5" onSubmit={submit}>
+      <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
         <BottleImage
           editable
           imageUrl={form.imageUrl}
@@ -297,24 +347,75 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
         ) : null}
       </div>
 
-      <div className="space-y-8">
-        <div className="rounded-lg border border-ink/10 bg-porcelain p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="section-kicker">Basic info</p>
-              <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Bottle identity</h3>
-              <p className="mt-2 text-sm leading-6 text-smoke">
-                Enter producer, wine name, and vintage, then ask the sommelier to suggest likely details.
-              </p>
+      <div className="space-y-5 lg:space-y-8">
+        <div className="lg:hidden">
+          <p className="section-kicker">{isEditing ? 'Edit bottle' : 'Add bottle'}</p>
+          <h3 className="mt-1 font-serif text-2xl font-bold text-ink">Quick cellar entry</h3>
+          <p className="mt-2 text-sm leading-6 text-smoke">
+            Start with the label, let AI help if you want, then review before saving.
+          </p>
+          <div className="mt-4 grid grid-cols-5 gap-1.5">
+            {wineFormSteps.map((step, index) => (
+              <button
+                key={step.id}
+                className={`wine-step-dot ${activeStep === step.id ? 'wine-step-dot-active' : ''}`}
+                type="button"
+                onClick={() => setActiveStep(step.id)}
+                aria-label={`Go to ${step.label}`}
+              >
+                <span>{index + 1}</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-smoke">
+            <span>{wineFormSteps[activeStepIndex]?.label}</span>
+            <span>{activeStepIndex + 1} of {wineFormSteps.length}</span>
+          </div>
+        </div>
+
+        <StepSection
+          step="basic"
+          activeStep={activeStep}
+          kicker="Basic info"
+          title="Bottle identity"
+          description="Enter producer, wine name, and vintage, then ask the sommelier to suggest likely details."
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <label>
+              <span className="field-label">Wine name<SuggestedMark show={suggestedFields.has('name')} /></span>
+              <input className={`field mt-2 ${suggestedClass('name')}`} value={form.name} onChange={(event) => update('name', event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Producer<SuggestedMark show={suggestedFields.has('producer')} /></span>
+              <input className={`field mt-2 ${suggestedClass('producer')}`} value={form.producer} onChange={(event) => update('producer', event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Vintage<SuggestedMark show={suggestedFields.has('vintage')} /></span>
+              <input className={`field mt-2 ${suggestedClass('vintage')}`} type="number" inputMode="numeric" value={numberValue(form.vintage)} onChange={(event) => updateNumber('vintage', event.target.value)} />
+            </label>
+          </div>
+          <div className="ai-surface mt-4 rounded-lg border border-lavender/30 bg-lavender/10 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="font-bold text-ink">Autofill with AI</p>
+                <p className="mt-1 text-sm leading-6 text-smoke">
+                  AI fills likely details into empty fields. Everything stays editable.
+                </p>
+              </div>
+              <button
+                className="premium-button min-h-12 shrink-0 lg:min-h-0"
+                type="button"
+                onClick={() => void runAutofill()}
+                disabled={!canAutofill || isAutofilling}
+              >
+                {isAutofilling ? 'Generating details...' : 'Autofill with AI'}
+              </button>
             </div>
-            <button
-              className="premium-button shrink-0"
-              type="button"
-              onClick={() => void runAutofill()}
-              disabled={!canAutofill || isAutofilling}
-            >
-              {isAutofilling ? 'Generating suggested wine details...' : 'Autofill with AI'}
-            </button>
+            {!canAutofill ? (
+              <p className="mt-3 text-xs font-bold uppercase tracking-wide text-plum/80">
+                Add wine name, producer, and a valid vintage to enable AI autofill.
+              </p>
+            ) : null}
           </div>
           {autofillError ? (
             <div className="mt-4 rounded-lg border border-clay/30 bg-clay/10 p-3 text-sm leading-6 text-clay">
@@ -353,19 +454,16 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
               <div className="skeleton h-3 w-1/2" />
             </div>
           ) : null}
-          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <label>
-              <span className="field-label">Wine name<SuggestedMark show={suggestedFields.has('name')} /></span>
-              <input className={`field mt-2 ${suggestedClass('name')}`} required value={form.name} onChange={(event) => update('name', event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Producer<SuggestedMark show={suggestedFields.has('producer')} /></span>
-              <input className={`field mt-2 ${suggestedClass('producer')}`} required value={form.producer} onChange={(event) => update('producer', event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Vintage<SuggestedMark show={suggestedFields.has('vintage')} /></span>
-              <input className={`field mt-2 ${suggestedClass('vintage')}`} required type="number" value={numberValue(form.vintage)} onChange={(event) => updateNumber('vintage', event.target.value)} />
-            </label>
+        </StepSection>
+
+        <StepSection
+          step="details"
+          activeStep={activeStep}
+          kicker="Details"
+          title="Origin, inventory, and location"
+          description="Add the bottle details you know now. You can always refine these later."
+        >
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <label>
               <span className="field-label">Appellation<SuggestedMark show={suggestedFields.has('appellation')} /></span>
               <input className={`field mt-2 ${suggestedClass('appellation')}`} value={form.appellation} onChange={(event) => update('appellation', event.target.value)} />
@@ -396,13 +494,6 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
               <span className="field-label">Bottle size</span>
               <input className="field mt-2" value={form.bottleSize} onChange={(event) => update('bottleSize', event.target.value)} />
             </label>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-ink/10 bg-porcelain p-5">
-          <p className="section-kicker">Purchase</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Inventory and value</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <label>
               <span className="field-label">Quantity</span>
               <input className="field mt-2" type="number" min="0" value={numberValue(form.quantity)} onChange={(event) => updateNumber('quantity', event.target.value)} />
@@ -437,32 +528,6 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
               <span className="field-label">Acquisition source</span>
               <input className="field mt-2" value={form.acquisitionSource} onChange={(event) => update('acquisitionSource', event.target.value)} />
             </label>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-ink/10 bg-porcelain p-5">
-          <p className="section-kicker">Aging</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Drink window</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
-            <label>
-              <span className="field-label">Start year<SuggestedMark show={suggestedFields.has('drinkWindowStart')} /></span>
-              <input className={`field mt-2 ${suggestedClass('drinkWindowStart')}`} type="number" value={numberValue(form.drinkWindowStart)} onChange={(event) => updateNumber('drinkWindowStart', event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">End year<SuggestedMark show={suggestedFields.has('drinkWindowEnd')} /></span>
-              <input className={`field mt-2 ${suggestedClass('drinkWindowEnd')}`} type="number" value={numberValue(form.drinkWindowEnd)} onChange={(event) => updateNumber('drinkWindowEnd', event.target.value)} />
-            </label>
-            <label>
-              <span className="field-label">Best drink by<SuggestedMark show={suggestedFields.has('bestDrinkBy')} /></span>
-              <input className={`field mt-2 ${suggestedClass('bestDrinkBy')}`} type="number" value={numberValue(form.bestDrinkBy)} onChange={(event) => updateNumber('bestDrinkBy', event.target.value)} />
-            </label>
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-ink/10 bg-porcelain p-5">
-          <p className="section-kicker">Location</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Storage location</h3>
-          <div className="mt-4 grid gap-4 md:grid-cols-3">
             {(['rack', 'shelf', 'bin', 'box', 'fridge'] as const).map((key) => (
               <label key={key}>
                 <span className="field-label">{key}</span>
@@ -488,12 +553,39 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
               />
             </label>
           </div>
-        </div>
+        </StepSection>
 
-        <div className="rounded-lg border border-ink/10 bg-porcelain p-5">
-          <p className="section-kicker">Journal</p>
-          <h3 className="mt-2 font-serif text-2xl font-bold text-ink">Notes</h3>
-          <div className="mt-4 grid gap-4">
+        <StepSection
+          step="window"
+          activeStep={activeStep}
+          kicker="Drink window"
+          title="When should it be opened?"
+          description="These years power the drinkability badges and cellar priorities."
+        >
+          <div className="grid gap-4 md:grid-cols-3">
+            <label>
+              <span className="field-label">Start year<SuggestedMark show={suggestedFields.has('drinkWindowStart')} /></span>
+              <input className={`field mt-2 ${suggestedClass('drinkWindowStart')}`} type="number" value={numberValue(form.drinkWindowStart)} onChange={(event) => updateNumber('drinkWindowStart', event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">End year<SuggestedMark show={suggestedFields.has('drinkWindowEnd')} /></span>
+              <input className={`field mt-2 ${suggestedClass('drinkWindowEnd')}`} type="number" value={numberValue(form.drinkWindowEnd)} onChange={(event) => updateNumber('drinkWindowEnd', event.target.value)} />
+            </label>
+            <label>
+              <span className="field-label">Best drink by<SuggestedMark show={suggestedFields.has('bestDrinkBy')} /></span>
+              <input className={`field mt-2 ${suggestedClass('bestDrinkBy')}`} type="number" value={numberValue(form.bestDrinkBy)} onChange={(event) => updateNumber('bestDrinkBy', event.target.value)} />
+            </label>
+          </div>
+        </StepSection>
+
+        <StepSection
+          step="notes"
+          activeStep={activeStep}
+          kicker="Notes"
+          title="Tasting and pairing"
+          description="Capture what matters for future you."
+        >
+          <div className="grid gap-4">
             <label>
               <span className="field-label">Tasting notes<SuggestedMark show={suggestedFields.has('tastingNotes')} /></span>
               <textarea className={`field mt-2 min-h-24 ${suggestedClass('tastingNotes')}`} value={form.tastingNotes} onChange={(event) => update('tastingNotes', event.target.value)} />
@@ -528,14 +620,62 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
               <textarea className={`field mt-2 min-h-20 ${suggestedClass('aiAdvice')}`} value={form.aiAdvice} onChange={(event) => update('aiAdvice', event.target.value)} />
             </label>
           </div>
-        </div>
+        </StepSection>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-ink/10 pt-5 sm:flex-row sm:justify-end">
+        <StepSection
+          step="review"
+          activeStep={activeStep}
+          kicker="Review"
+          title="Ready for the cellar?"
+          description="A quick scan before saving to your collection."
+        >
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {[
+              ['Bottle', `${form.vintage || 'NV'} ${form.name || 'Unnamed wine'}`],
+              ['Producer', form.producer || 'Not set'],
+              ['Origin', [form.region, form.country].filter(Boolean).join(', ') || 'Not set'],
+              ['Drink window', `${form.drinkWindowStart || '?'}-${form.drinkWindowEnd || '?'}`],
+              ['Best by', form.bestDrinkBy || 'Not set'],
+              ['Location', form.storageLocation.displayName || 'Unassigned'],
+            ].map(([label, value]) => (
+              <div key={String(label)} className="rounded-lg border border-ink/10 bg-white p-4 shadow-sm">
+                <p className="field-label">{label}</p>
+                <p className="mt-2 text-sm font-bold leading-5 text-ink">{value}</p>
+              </div>
+            ))}
+          </div>
+        </StepSection>
+
+        <div className="hidden flex-col-reverse gap-3 border-t border-ink/10 pt-5 sm:flex-row sm:justify-end lg:flex">
           <button className="secondary-button" type="button" onClick={onCancel}>
             Cancel
           </button>
           <button className="premium-button" type="submit">
             {isEditing ? 'Save changes' : 'Add wine'}
+          </button>
+        </div>
+
+        <div className="sticky bottom-0 z-20 -mx-4 grid gap-3 border-t border-ink/10 bg-porcelain/95 p-4 shadow-[0_-16px_38px_rgba(42,31,33,0.09)] backdrop-blur lg:hidden">
+          <div className="grid grid-cols-2 gap-3">
+            <button className="secondary-button" type="button" onClick={() => goToStep(-1)} disabled={activeStepIndex === 0}>
+              Back
+            </button>
+            <button className="premium-button" type="submit">
+              {isEditing ? 'Save' : 'Save wine'}
+            </button>
+          </div>
+          {!isLastStep ? (
+            <button className="secondary-button bg-white" type="button" onClick={() => goToStep(1)}>
+              Next: {wineFormSteps[activeStepIndex + 1]?.label}
+            </button>
+          ) : null}
+          <button
+            className="secondary-button border-lavender/30 bg-white"
+            type="button"
+            onClick={() => void runAutofill()}
+            disabled={!canAutofill || isAutofilling}
+          >
+            {isAutofilling ? 'Autofilling...' : 'Autofill with AI'}
           </button>
         </div>
       </div>
