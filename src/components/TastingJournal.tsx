@@ -49,8 +49,8 @@ export default function TastingJournal({ wine, onAddTastingEntry }: TastingJourn
         <p className="text-sm text-smoke">{wine.tastingLog.length} logged tasting{wine.tastingLog.length === 1 ? '' : 's'}</p>
       </div>
 
-      <form className="interactive-surface mt-5 rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm hover:border-gold/25 hover:shadow-subtle sm:p-5" onSubmit={addEntry}>
-        <div className="grid gap-4 sm:grid-cols-3">
+      <form className="interactive-surface mt-5 rounded-lg border border-ink/10 bg-porcelain p-4 shadow-sm hover:border-gold/25 hover:shadow-subtle" onSubmit={addEntry}>
+        <div className="grid gap-4 md:grid-cols-3">
           <label>
             <span className="field-label">Date</span>
             <input
@@ -101,9 +101,8 @@ export default function TastingJournal({ wine, onAddTastingEntry }: TastingJourn
           />
         </label>
         <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <label className="inline-flex min-h-11 items-center gap-3 rounded-md border border-ink/10 bg-white px-3 text-sm font-semibold text-ink shadow-sm sm:border-0 sm:bg-transparent sm:px-0 sm:shadow-none">
+          <label className="inline-flex items-center gap-2 text-sm font-semibold text-ink">
             <input
-              className="h-5 w-5 accent-vine"
               type="checkbox"
               checked={entry.decanted}
               onChange={(event) => setEntry({ ...entry, decanted: event.target.checked })}
@@ -117,25 +116,19 @@ export default function TastingJournal({ wine, onAddTastingEntry }: TastingJourn
       </form>
 
       <div className="mt-5 space-y-4">
-        {wine.tastingLog.length ? (
-          wine.tastingLog.map((log) => (
-            <article key={log.id} className="tasting-note-card">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-bold text-ink">{log.tastingDate}</p>
-                  <p className="text-sm text-smoke">{log.occasion || 'Casual tasting'} · {log.decanted ? 'Decanted' : 'Not decanted'}</p>
-                </div>
-                <span className="w-fit rounded-full bg-gold/15 px-3 py-1 text-sm font-bold text-[#7B5A22]">{formatRating(log.rating)}</span>
+        {wine.tastingLog.map((log) => (
+          <article key={log.id} className="tasting-note-card">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="font-bold text-ink">{log.tastingDate}</p>
+                <p className="text-sm text-smoke">{log.occasion || 'Casual tasting'} - {log.decanted ? 'Decanted' : 'Not decanted'}</p>
               </div>
-              <p className="mt-4 text-sm leading-6 text-ink">{log.notes}</p>
-              {log.pairings ? <p className="mt-3 text-sm font-semibold text-moss">With {log.pairings}</p> : null}
-            </article>
-          ))
-        ) : (
-          <div className="rounded-lg border border-dashed border-ink/15 bg-porcelain p-5 text-sm leading-6 text-smoke">
-            No tastings logged yet. Add a note when you open a bottle to track how it evolves over time.
-          </div>
-        )}
+              <span className="rounded-full bg-gold/15 px-3 py-1 text-sm font-bold text-[#7B5A22]">{formatRating(log.rating)}</span>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-ink">{log.notes}</p>
+            {log.pairings ? <p className="mt-3 text-sm font-semibold text-moss">With {log.pairings}</p> : null}
+          </article>
+        ))}
       </div>
     </section>
   );

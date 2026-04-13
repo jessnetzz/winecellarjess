@@ -264,7 +264,7 @@ function AuthenticatedCellar({ user }: { user: User }) {
         {wines.length ? (
           <>
             <section id="dashboard" className="scroll-mt-32">
-              <Dashboard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} onCreateWine={openCreate} />
+              <Dashboard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
             </section>
             <section id="drink-now" className="scroll-mt-32">
               <CellarPriorities wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
