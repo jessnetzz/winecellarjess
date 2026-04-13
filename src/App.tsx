@@ -204,19 +204,19 @@ function AuthenticatedCellar({ user }: { user: User }) {
       onSignOut={() => void authService.signOut()}
       onToggleView={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
     >
-      <main className="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
-        <section className="whimsy-hero grid gap-6 rounded-lg border border-[#E7DCCB] p-5 shadow-subtle sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
+        <section className="whimsy-hero grid gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
           <div>
             <p className="section-kicker">Private cellar</p>
-            <h1 className="mt-3 max-w-4xl font-liam text-5xl font-normal leading-tight text-ink sm:text-6xl">
+            <h1 className="mt-2 max-w-4xl font-liam text-4xl font-normal leading-tight text-ink sm:mt-3 sm:text-6xl">
               Your collection, in one place—drink windows, tasting notes, and cellar value, thoughtfully kept.
             </h1>
             <CellarStats wines={wines} />
-            <p className="mt-5 max-w-3xl text-base leading-7 text-smoke">
+            <p className="mt-4 max-w-3xl text-sm leading-6 text-smoke sm:mt-5 sm:text-base sm:leading-7">
               Track bottles, spot what is at peak, and keep your Supabase-backed collection in sync across your devices.
             </p>
           </div>
-          <div className="rounded-lg border border-plum/15 bg-white/80 p-5 shadow-sm">
+          <div className="hidden rounded-lg border border-plum/15 bg-white/80 p-5 shadow-sm sm:block">
             <p className="field-label">Signed in</p>
             <p className="mt-2 truncate text-sm font-bold text-ink">{user.email}</p>
             <p className="mt-3 text-sm leading-6 text-smoke">Your private rows are loaded through the existing Supabase service layer.</p>
