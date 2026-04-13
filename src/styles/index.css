@@ -195,7 +195,7 @@ select:focus-visible {
   }
 
   .cellar-stats-scroll {
-    @apply -mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-2 sm:gap-3 sm:overflow-visible sm:pb-0 md:flex-wrap;
+    @apply flex max-w-full flex-nowrap gap-2 overflow-x-auto pb-2 sm:gap-3 sm:overflow-visible sm:pb-0 md:flex-wrap;
     scrollbar-width: none;
   }
 
@@ -204,11 +204,13 @@ select:focus-visible {
   }
 
   .cellar-stat-card {
-    @apply interactive-surface flex min-w-[168px] max-w-[210px] shrink-0 items-center gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold leading-5 text-ink shadow-sm hover:-translate-y-0.5 hover:bg-white/80 hover:shadow-subtle sm:min-w-[190px] sm:max-w-[230px] sm:gap-3 sm:px-4 sm:py-3;
+    @apply interactive-surface flex min-w-[160px] max-w-[210px] shrink-0 items-start gap-2.5 rounded-lg border px-3 py-2.5 text-sm font-semibold leading-5 text-ink shadow-sm hover:-translate-y-0.5 hover:bg-white/80 hover:shadow-subtle sm:min-w-[190px] sm:max-w-[230px] sm:gap-3 sm:px-4 sm:py-3;
   }
 
   .whimsy-hero {
-    @apply relative overflow-visible bg-porcelain/90;
+    @apply relative bg-porcelain/90;
+    overflow-x: clip;
+    overflow-y: visible;
     background:
       linear-gradient(135deg, rgba(255, 249, 240, 0.96), rgba(248, 242, 232, 0.88)),
       radial-gradient(circle at 92% 20%, rgba(185, 162, 197, 0.22), transparent 24%),

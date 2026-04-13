@@ -18,15 +18,15 @@ export default function CellarStats({ wines }: CellarStatsProps) {
   if (!stats.length) return null;
 
   return (
-    <section className="mt-4 sm:mt-6" aria-labelledby="cellar-stats-heading">
+    <section className="mt-4 min-w-0 max-w-full sm:mt-6" aria-labelledby="cellar-stats-heading">
       <p id="cellar-stats-heading" className="section-kicker">
         Your Cellar at a Glance
       </p>
       <div className="cellar-stats-scroll mt-3">
         {stats.map((stat) => (
           <article key={stat.id} className={`cellar-stat-card ${toneClasses[stat.tone]}`}>
-            <span className="text-base" aria-hidden="true">{stat.icon}</span>
-            <p>{stat.text}</p>
+            <span className="shrink-0 text-base" aria-hidden="true">{stat.icon}</span>
+            <p className="min-w-0 whitespace-normal break-words">{stat.text}</p>
           </article>
         ))}
       </div>
