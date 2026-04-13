@@ -14,16 +14,16 @@ export default function StorageLocationView({ wines, onSelectWine }: StorageLoca
   }, {});
 
   return (
-    <section className="panel p-5">
+    <section className="panel p-4 sm:p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="section-kicker">Storage map</p>
-          <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Find the bottle</h2>
+          <h2 className="mt-2 font-serif text-2xl font-bold text-ink sm:text-3xl">Find the bottle</h2>
         </div>
         <p className="text-sm leading-6 text-smoke">Grouped by rack, shelf, bin, box, fridge, or any display location you enter.</p>
       </div>
       <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {Object.entries(groups)
+        {Object.keys(groups).length ? Object.entries(groups)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([location, locationWines]) => (
             <div key={location} className="storage-card group">
@@ -50,7 +50,7 @@ export default function StorageLocationView({ wines, onSelectWine }: StorageLoca
                 {locationWines.map((wine) => (
                   <button
                     key={wine.id}
-                    className="storage-bottle-button"
+                    className="storage-bottle-button min-h-14"
                     type="button"
                     onClick={() => onSelectWine(wine)}
                   >
@@ -60,7 +60,11 @@ export default function StorageLocationView({ wines, onSelectWine }: StorageLoca
                 ))}
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="rounded-lg border border-dashed border-ink/15 bg-porcelain p-6 text-sm leading-6 text-smoke md:col-span-2 xl:col-span-3">
+              Add a bottle with a rack, shelf, bin, box, fridge, or display label and it will appear here.
+            </div>
+          )}
       </div>
     </section>
   );

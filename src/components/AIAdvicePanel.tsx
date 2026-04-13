@@ -33,7 +33,7 @@ export default function AIAdvicePanel({ wine, onApplyAdvice }: AIAdvicePanelProp
 
   return (
     <section className="ai-surface overflow-hidden rounded-lg border border-vine/15 bg-white shadow-subtle">
-      <div className="border-b border-vine/10 bg-gradient-to-r from-vine to-pinot px-5 py-4 text-white">
+      <div className="border-b border-vine/10 bg-gradient-to-r from-vine to-pinot px-4 py-4 text-white sm:px-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/15">
@@ -44,12 +44,12 @@ export default function AIAdvicePanel({ wine, onApplyAdvice }: AIAdvicePanelProp
               <h3 className="mt-1 font-serif text-2xl font-bold">Cellar guidance</h3>
             </div>
           </div>
-          <button className="secondary-button border-white/30 bg-white/95" type="button" onClick={getAdvice} disabled={isLoading}>
+          <button className="secondary-button w-full border-white/30 bg-white/95 sm:w-auto" type="button" onClick={getAdvice} disabled={isLoading}>
             {isLoading ? 'Thinking...' : 'Get AI Advice'}
           </button>
         </div>
       </div>
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         {isLoading ? (
           <div className="space-y-3">
             <div className="skeleton h-4 w-3/4" />
