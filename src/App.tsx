@@ -11,6 +11,7 @@ import FiltersPanel from './components/FiltersPanel';
 import ImportExportTools from './components/ImportExportTools';
 import Modal from './components/Modal';
 import StorageLocationView from './components/StorageLocationView';
+import TonightsBottleCard from './components/TonightsBottleCard';
 import WineDetail from './components/WineDetail';
 import WineForm from './components/WineForm';
 import { useAuth } from './hooks/useAuth';
@@ -214,15 +215,18 @@ function AuthenticatedCellar({ user }: { user: User }) {
                 Your collection, in one place—drink windows, tasting notes, and cellar value, thoughtfully kept.
               </span>
             </h1>
-            <CellarStats wines={wines} />
+            <div className="mt-4 grid gap-4 xl:block">
+              <CellarStats wines={wines} />
+              <div className="xl:hidden">
+                <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+              </div>
+            </div>
             <p className="mt-4 max-w-full whitespace-normal break-words text-sm leading-6 text-smoke sm:mt-5 sm:max-w-3xl sm:text-base sm:leading-7">
               Track bottles, spot what is at peak, and keep your Supabase-backed collection in sync across your devices.
             </p>
           </div>
-          <div className="hidden rounded-lg border border-plum/15 bg-white/80 p-5 shadow-sm sm:block">
-            <p className="field-label">Signed in</p>
-            <p className="mt-2 truncate text-sm font-bold text-ink">{user.email}</p>
-            <p className="mt-3 text-sm leading-6 text-smoke">Your private rows are loaded through the existing Supabase service layer.</p>
+          <div className="hidden xl:block">
+            <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
           </div>
         </section>
 

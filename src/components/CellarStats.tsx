@@ -18,7 +18,7 @@ export default function CellarStats({ wines }: CellarStatsProps) {
   if (!stats.length) return null;
 
   return (
-    <section className="mt-4 min-w-0 max-w-full sm:mt-6" aria-labelledby="cellar-stats-heading">
+    <section className="min-w-0 max-w-full" aria-labelledby="cellar-stats-heading">
       <p id="cellar-stats-heading" className="section-kicker">
         Your Cellar at a Glance
       </p>
