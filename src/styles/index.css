@@ -79,7 +79,7 @@ select:focus-visible {
   }
 
   .premium-button {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-white/15 bg-plum px-4 py-2 text-sm font-semibold text-white shadow-subtle transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-pinot hover:shadow-lift active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-subtle;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-plum px-4 py-2 text-sm font-semibold text-white shadow-subtle transition duration-300 ease-out hover:-translate-y-0.5 hover:bg-pinot hover:shadow-lift active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-subtle;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 10px 30px rgba(96, 64, 104, 0.16);
   }
 
@@ -91,16 +91,16 @@ select:focus-visible {
   }
 
   .secondary-button {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-plum/20 bg-porcelain px-4 py-2 text-sm font-semibold text-ink shadow-sm transition duration-300 ease-out hover:-translate-y-0.5 hover:border-plum/40 hover:bg-white hover:text-plum hover:shadow-subtle active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm;
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-plum/20 bg-porcelain px-4 py-2 text-sm font-semibold text-ink shadow-sm transition duration-300 ease-out hover:-translate-y-0.5 hover:border-plum/40 hover:bg-white hover:text-plum hover:shadow-subtle active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 6px 16px rgba(42, 31, 33, 0.05);
   }
 
   .ghost-button {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-plum transition duration-300 ease-out hover:-translate-y-px hover:bg-lavender/15 hover:text-pinot active:translate-y-0 active:bg-lavender/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-plum transition duration-300 ease-out hover:-translate-y-px hover:bg-lavender/15 hover:text-pinot active:translate-y-0 active:bg-lavender/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0;
   }
 
   .field {
-    @apply min-h-12 w-full rounded-md border border-ink/15 bg-white px-3 py-3 text-base text-ink shadow-sm transition duration-300 ease-out placeholder:text-smoke hover:border-plum/30 hover:bg-porcelain/80 focus:border-lavender focus:bg-porcelain focus:shadow-subtle sm:min-h-11 sm:py-2 sm:text-sm;
+    @apply w-full rounded-md border border-ink/15 bg-white px-3 py-2 text-sm text-ink shadow-sm transition duration-300 ease-out placeholder:text-smoke hover:border-plum/30 hover:bg-porcelain/80 focus:border-lavender focus:bg-porcelain focus:shadow-subtle;
   }
 
   .field-label {
@@ -180,32 +180,6 @@ select:focus-visible {
 
   .filter-chip-active {
     @apply border-plum/35 bg-plum text-white shadow-subtle hover:bg-pinot hover:text-white;
-  }
-
-  .mobile-form-section {
-    @apply rounded-lg border border-[#E7DCCB] bg-porcelain p-4 shadow-sm lg:p-5;
-  }
-
-  .form-section-toggle {
-    @apply flex w-full items-start justify-between gap-4 text-left;
-  }
-
-  .form-section-toggle-icon {
-    @apply mt-1 inline-flex min-h-9 shrink-0 items-center justify-center rounded-md border border-lavender/25 bg-white/75 px-3 text-[10px] font-extrabold uppercase tracking-wide text-plum shadow-sm;
-  }
-
-  .form-step-chip {
-    @apply inline-flex min-h-10 shrink-0 items-center justify-center rounded-md border border-plum/15 bg-white/80 px-3 py-2 text-xs font-extrabold uppercase tracking-wide text-smoke shadow-sm transition duration-300 ease-out active:scale-[0.98];
-  }
-
-  .form-step-chip-active {
-    @apply border-plum/35 bg-plum text-white shadow-subtle;
-  }
-
-  .ai-autofill-card {
-    background:
-      linear-gradient(135deg, rgba(248, 242, 232, 0.84), rgba(255, 255, 255, 0.7)),
-      radial-gradient(circle at right top, rgba(185, 162, 197, 0.24), transparent 36%);
   }
 
   .whimsy-hero {
