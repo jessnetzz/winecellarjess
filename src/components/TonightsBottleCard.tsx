@@ -1,55 +1,56 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DrinkStatusBadge from './DrinkStatusBadge';
+import { getLocalWeather, LocalWeather } from '../services/localWeatherService';
 import { Wine } from '../types/wine';
-import { getDrinkabilityInfo } from '../utils/drinkWindow';
+import {
+  getWeatherAwareRecommendation,
+  getWeatherContextLabel,
+  getWeatherRecommendationContext,
+  scoreTonightsBottle,
+} from '../utils/tonightsBottleWeatherMatrix';
 
 interface TonightsBottleCardProps {
   wines: Wine[];
   onSelectWine?: (wine: Wine) => void;
 }
 
-function scoreWine(wine: Wine) {
-  const drinkInfo = getDrinkabilityInfo(wine);
-  const ratingScore = wine.personalRating ? Math.max(0, wine.personalRating - 80) : 6;
-  const quantityScore = Math.min(wine.quantity, 3) * 2;
-  const openedPenalty = wine.status === 'opened' ? -10 : 0;
-  const consumedPenalty = wine.status === 'consumed' ? -999 : 0;
-
-  return drinkInfo.urgencyScore + ratingScore + quantityScore + openedPenalty + consumedPenalty;
-}
-
-function recommendationFor(wine: Wine) {
-  const status = getDrinkabilityInfo(wine).status;
-
-  if (status === 'Peak window') {
-    return 'Drinking beautifully now, with enough presence to feel a little special.';
-  }
-
-  if (status === 'Nearing end of peak') {
-    return 'A thoughtful candidate for dinner tonight before it slips further along.';
-  }
-
-  if (status === 'Ready to drink') {
-    return 'This one looks ready and would make a lovely bottle to open tonight.';
-  }
-
-  return 'Not perfectly in its moment, but still worth a look if it feels right tonight.';
-}
-
 export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBottleCardProps) {
+  const [offset, setOffset] = useState(0);
+  const [weather, setWeather] = useState<LocalWeather | null>(null);
+  const [weatherAttempted, setWeatherAttempted] = useState(false);
+  const weatherContext = useMemo(() => getWeatherRecommendationContext(weather), [weather]);
   const candidates = useMemo(
     () =>
       wines
         .filter((wine) => wine.status !== 'consumed' && wine.quantity > 0)
         .sort((a, b) => {
-          const scoreDifference = scoreWine(b) - scoreWine(a);
+          const scoreDifference = scoreTonightsBottle(b, weatherContext) - scoreTonightsBottle(a, weatherContext);
           if (scoreDifference !== 0) return scoreDifference;
           return a.name.localeCompare(b.name);
         }),
-    [wines],
+    [wines, weatherContext],
   );
-  const [offset, setOffset] = useState(0);
   const wine = candidates.length ? candidates[offset % candidates.length] : undefined;
+  const weatherContextLabel = getWeatherContextLabel(weatherContext);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    getLocalWeather()
+      .then((localWeather) => {
+        if (isMounted) setWeather(localWeather);
+      })
+      .catch(() => {
+        if (isMounted) setWeather(null);
+      })
+      .finally(() => {
+        if (isMounted) setWeatherAttempted(true);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (!wine) {
     return (
@@ -81,9 +82,17 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <DrinkStatusBadge wine={wine} compact />
         {location ? <span className="rounded-md bg-white/70 px-2.5 py-1 text-xs font-bold text-smoke">{location}</span> : null}
+        {weatherContextLabel ? (
+          <span className="rounded-md bg-lavender/25 px-2.5 py-1 text-xs font-bold text-plum">
+            {weatherContextLabel}
+          </span>
+        ) : null}
       </div>
 
-      <p className="mt-4 text-sm leading-6 text-ink">{recommendationFor(wine)}</p>
+      <p className="mt-4 text-sm leading-6 text-ink">{getWeatherAwareRecommendation(wine, weatherContext)}</p>
+      {!weatherContext && !weatherAttempted ? (
+        <p className="mt-2 text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>
+      ) : null}
 
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
         {onSelectWine ? (
