@@ -20,7 +20,7 @@ export default function CollectionCards({ wines, onSelectWine, onEditWine }: Col
         <p className="section-kicker mt-6">No matches</p>
         <h3 className="mt-2 font-serif text-3xl font-bold text-ink">Try relaxing a filter</h3>
         <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-smoke">
-          Search checks the bottle name, producer, origin, varietal, tasting notes, pairings, and storage label.
+          Search understands names, producers, mood, pairings, tasting notes, AI advice, drink windows, and journal entries.
         </p>
       </section>
     );

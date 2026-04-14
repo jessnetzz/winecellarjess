@@ -19,7 +19,8 @@ import { useAuth } from './hooks/useAuth';
 import { usePersistentWines } from './hooks/usePersistentWines';
 import { AppRoute, useRoute } from './hooks/useRoute';
 import { authService } from './services/authService';
-import { SortConfig, TastingLogEntry, Wine, WineFilters } from './types/wine';
+import { searchWinesNaturally } from './services/naturalLanguageSearchService';
+import { NaturalLanguageSearchMatch, SortConfig, TastingLogEntry, Wine, WineFilters } from './types/wine';
 import { getDrinkabilityInfo } from './utils/drinkWindow';
 
 type ViewMode = 'cards' | 'table';
@@ -54,7 +55,7 @@ function searchableWineText(wine: Wine) {
     .toLowerCase();
 }
 
-function applyFilters(wines: Wine[], filters: WineFilters) {
+function applyFilters(wines: Wine[], filters: WineFilters, semanticIds?: Set<string>) {
   const query = filters.query.trim().toLowerCase();
   const minRating = filters.rating ? Number(filters.rating) : undefined;
   const vintage = filters.vintage ? Number(filters.vintage) : undefined;
@@ -63,7 +64,7 @@ function applyFilters(wines: Wine[], filters: WineFilters) {
     const drinkStatus = getDrinkabilityInfo(wine).status;
 
     return (
-      (!query || searchableWineText(wine).includes(query)) &&
+      (!query || searchableWineText(wine).includes(query) || semanticIds?.has(wine.id)) &&
       (filters.style === 'all' || wine.style === filters.style) &&
       (!filters.country || wine.country === filters.country) &&
       (!filters.region || wine.region === filters.region) &&
@@ -73,6 +74,16 @@ function applyFilters(wines: Wine[], filters: WineFilters) {
       (!Number.isFinite(minRating) || (wine.personalRating ?? 0) >= Number(minRating)) &&
       (!Number.isFinite(vintage) || wine.vintage === Number(vintage))
     );
+  });
+}
+
+function applySemanticOrder(wines: Wine[], matches: NaturalLanguageSearchMatch[]) {
+  const rank = new Map(matches.map((match, index) => [match.id, index]));
+  return [...wines].sort((a, b) => {
+    const aRank = rank.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+    const bRank = rank.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.name.localeCompare(b.name);
   });
 }
 
@@ -142,7 +153,7 @@ function LocalImportBanner({
   );
 }
 
-function AuthenticatedCellar({ user }: { user: User }) {
+function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: string }) {
   const {
     wines,
     isLoading,
@@ -166,9 +177,57 @@ function AuthenticatedCellar({ user }: { user: User }) {
   const [editingWine, setEditingWine] = useState<Wine | undefined>();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Wine | null>(null);
+  const [naturalSearch, setNaturalSearch] = useState<{
+    query: string;
+    matches: NaturalLanguageSearchMatch[];
+    isLoading: boolean;
+    error: string | null;
+  }>({ query: '', matches: [], isLoading: false, error: null });
 
-  const filteredWines = useMemo(() => applySort(applyFilters(wines, filters), sort), [wines, filters, sort]);
+  const activeNaturalSearch =
+    naturalSearch.query === filters.query.trim() && naturalSearch.matches.length > 0 && !naturalSearch.error;
+  const naturalSearchIds = useMemo(
+    () => activeNaturalSearch ? new Set(naturalSearch.matches.map((match) => match.id)) : undefined,
+    [activeNaturalSearch, naturalSearch.matches],
+  );
+  const filteredWines = useMemo(() => {
+    const filtered = applyFilters(wines, filters, naturalSearchIds);
+    return activeNaturalSearch ? applySemanticOrder(filtered, naturalSearch.matches) : applySort(filtered, sort);
+  }, [activeNaturalSearch, naturalSearch.matches, naturalSearchIds, wines, filters, sort]);
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
+
+  useEffect(() => {
+    const query = filters.query.trim();
+    if (query.length < 3 || !accessToken || !wines.length) {
+      setNaturalSearch({ query: '', matches: [], isLoading: false, error: null });
+      return;
+    }
+
+    let isCurrent = true;
+    setNaturalSearch((current) => ({ ...current, query, isLoading: true, error: null }));
+
+    const timeout = window.setTimeout(() => {
+      searchWinesNaturally(query, accessToken, 40)
+        .then((result) => {
+          if (!isCurrent) return;
+          setNaturalSearch({ query: result.query, matches: result.matches, isLoading: false, error: null });
+        })
+        .catch((caught) => {
+          if (!isCurrent) return;
+          setNaturalSearch({
+            query,
+            matches: [],
+            isLoading: false,
+            error: caught instanceof Error ? caught.message : 'Natural-language search is unavailable right now.',
+          });
+        });
+    }, 650);
+
+    return () => {
+      isCurrent = false;
+      window.clearTimeout(timeout);
+    };
+  }, [accessToken, filters.query, wines.length]);
 
   const upsertWine = async (wine: Wine) => {
     const saved = await saveWine(wine);
@@ -207,6 +266,24 @@ function AuthenticatedCellar({ user }: { user: User }) {
     <AppShell
       user={user}
       query={filters.query}
+      searchStatus={
+        naturalSearch.isLoading
+          ? 'searching'
+          : activeNaturalSearch
+            ? 'smart'
+            : naturalSearch.error && filters.query.trim().length >= 3
+              ? 'fallback'
+              : 'idle'
+      }
+      searchMessage={
+        naturalSearch.isLoading
+          ? 'Reading your cellar by mood, pairing, occasion, and notes...'
+          : activeNaturalSearch
+            ? `${naturalSearch.matches.length} AI-ranked match${naturalSearch.matches.length === 1 ? '' : 'es'}`
+            : naturalSearch.error && filters.query.trim().length >= 3
+              ? 'AI search is unavailable, so keyword search is still working.'
+              : undefined
+      }
       viewMode={viewMode}
       isBusy={isLoading || isMutating}
       onQueryChange={(query) => setFilters((current) => ({ ...current, query }))}
@@ -403,14 +480,14 @@ function AuthenticatedCellar({ user }: { user: User }) {
 }
 
 export default function App() {
-  const { user, isLoading } = useAuth();
+  const { user, session, isLoading } = useAuth();
   const { route, navigate, replace } = useRoute();
 
   if (isLoading) return <LoadingScreen />;
 
   if (user) {
     if (route !== '/app') return <RouteRedirect to="/app" replace={replace} />;
-    return <AuthenticatedCellar user={user} />;
+    return <AuthenticatedCellar user={user} accessToken={session?.access_token ?? ''} />;
   }
 
   if (route === '/app') return <RouteRedirect to="/login" replace={replace} />;

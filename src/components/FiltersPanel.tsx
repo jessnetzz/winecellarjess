@@ -88,7 +88,7 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
           <input
             className="field mt-2"
             type="search"
-            placeholder="Wine, producer, region, grape, notes..."
+            placeholder="Mood, pairing, occasion, grape, notes..."
             value={filters.query}
             onChange={(event) => update({ query: event.target.value })}
           />

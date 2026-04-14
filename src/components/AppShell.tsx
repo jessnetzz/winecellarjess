@@ -6,6 +6,8 @@ interface AppShellProps {
   children: ReactNode;
   user: User;
   query: string;
+  searchStatus?: 'idle' | 'searching' | 'smart' | 'fallback';
+  searchMessage?: string;
   viewMode: 'cards' | 'table';
   isBusy: boolean;
   onQueryChange: (query: string) => void;
@@ -70,6 +72,8 @@ function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
 function TopNav({
   user,
   query,
+  searchStatus = 'idle',
+  searchMessage,
   viewMode,
   isBusy,
   onQueryChange,
@@ -93,10 +97,17 @@ function TopNav({
             <input
               className="field h-12 bg-white/95 pl-11 text-base sm:h-11 sm:text-sm"
               type="search"
-              placeholder="Search wine, producer, region, grape, notes..."
+              placeholder="Try “something cozy for a rainy night”..."
               value={query}
               onChange={(event) => onQueryChange(event.target.value)}
             />
+            {searchStatus !== 'idle' || searchMessage ? (
+              <span className={`mt-2 block text-xs font-semibold ${
+                searchStatus === 'fallback' ? 'text-clay' : searchStatus === 'searching' ? 'text-smoke' : 'text-plum'
+              }`}>
+                {searchMessage ?? (searchStatus === 'searching' ? 'Reading your cellar by mood, pairing, and notes...' : 'AI-ranked cellar results')}
+              </span>
+            ) : null}
           </label>
 
           <div className="flex flex-wrap items-center gap-3">

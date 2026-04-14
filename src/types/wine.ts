@@ -149,3 +149,18 @@ export interface WineAutofillResult {
   uncertainFields: string[];
   knownVsInferredSummary: string;
 }
+
+export interface NaturalLanguageSearchMatch {
+  id: string;
+  score: number;
+  semanticScore: number;
+  keywordScore: number;
+  readinessBoost: number;
+  qualityBoost: number;
+  reason: string;
+}
+
+export interface NaturalLanguageSearchResult {
+  query: string;
+  matches: NaturalLanguageSearchMatch[];
+}

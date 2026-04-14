@@ -1,6 +1,6 @@
 # Wine Cellar
 
-A premium personal wine cellar app built with React, TypeScript, Tailwind CSS, Vite, Supabase Auth, Supabase Postgres, CSV import/export, tasting logs, drink-window intelligence, and secure AI-assisted autofill.
+A premium personal wine cellar app built with React, TypeScript, Tailwind CSS, Vite, Supabase Auth, Supabase Postgres, CSV import/export, tasting logs, drink-window intelligence, secure AI-assisted autofill, and natural-language cellar search.
 
 ## Architecture
 
@@ -10,6 +10,7 @@ A premium personal wine cellar app built with React, TypeScript, Tailwind CSS, V
 - `src/services/wineStorage.ts` is now the repository layer. It maps normalized Supabase rows into the existing `Wine` app model and handles wine, storage location, tasting entry, demo seed, CSV import, and one-time localStorage migration operations.
 - `src/hooks/usePersistentWines.ts` owns loading, mutation, error, and local-import state for the authenticated user.
 - `api/wine-autofill.ts` is a Vercel serverless endpoint that validates wine autofill requests, calls OpenAI server-side, validates the structured response, and returns safe JSON to the form.
+- `api/search-wines.ts` is a Vercel serverless endpoint that uses the signed-in user's Supabase session plus OpenAI embeddings to rank the user's own wines for natural-language search.
 - `src/services/aiWineAutofillService.ts` is the frontend API client for the AI Sommelier Autofill flow.
 - `supabase/migrations/202604100001_initial_cellar_schema.sql` creates the database schema, indexes, triggers, and row-level security policies.
 
@@ -31,10 +32,11 @@ VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-supabase-anon-public-key
 OPENAI_API_KEY=your-openai-api-key
 OPENAI_MODEL=gpt-4.1-mini
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 ```
 
 Do not put service-role keys in this Vite app. Browser clients should only use the anon/public key; row-level security protects user data.
-`OPENAI_API_KEY` is used only by the Vercel serverless function in `api/wine-autofill.ts`; it must never be exposed with a `VITE_` prefix.
+`OPENAI_API_KEY` is used only by Vercel serverless functions in `api/wine-autofill.ts` and `api/search-wines.ts`; it must never be exposed with a `VITE_` prefix.
 
 ## Apply Database Migrations
 
@@ -62,13 +64,13 @@ npm run dev
 
 Open the local Vite URL. Sign up or sign in with email/password, then add wines, import CSV, or load demo data.
 
-For local AI Sommelier Autofill testing, run through Vercel’s local runtime so `/api/wine-autofill` is available:
+For local AI Sommelier Autofill and natural-language search testing, run through Vercel’s local runtime so `/api/wine-autofill` and `/api/search-wines` are available:
 
 ```bash
 npm exec -- vercel dev
 ```
 
-Make sure `.env` includes `OPENAI_API_KEY`. `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`.
+Make sure `.env` includes `OPENAI_API_KEY`. `OPENAI_MODEL` is optional and defaults to `gpt-4.1-mini`; `OPENAI_EMBEDDING_MODEL` is optional and defaults to `text-embedding-3-small`.
 
 ## LocalStorage Migration
 
@@ -92,6 +94,7 @@ name,producer,vintage,appellation,region,country,varietal,style,bottleSize,quant
    - `VITE_SUPABASE_ANON_KEY`
    - `OPENAI_API_KEY`
    - `OPENAI_MODEL` (optional, defaults to `gpt-4.1-mini`)
+   - `OPENAI_EMBEDDING_MODEL` (optional, defaults to `text-embedding-3-small`)
 3. Keep the build command as:
 
 ```bash
@@ -112,3 +115,9 @@ dist
 The AI Sommelier Autofill flow calls `src/services/aiWineAutofillService.ts`, which posts producer, wine name, and vintage to `api/wine-autofill.ts`. That endpoint calls OpenAI with a server-side `OPENAI_API_KEY`, requests structured JSON, validates the response, and returns normalized data to the form. The form highlights AI-suggested fields and keeps every field editable before saving through the existing Supabase path.
 
 The tasting advice panel still uses `src/services/aiAdviceService.ts`. If you later want real AI tasting advice too, follow the same backend-only pattern used by `api/wine-autofill.ts`.
+
+## Natural-Language Search
+
+The top search bar keeps normal keyword search but now also calls `src/services/naturalLanguageSearchService.ts` after a short debounce. The frontend sends the user's Supabase access token to `api/search-wines.ts`; the endpoint uses that token with Supabase RLS to load only that user's wines, builds searchable text from bottle metadata, drink-window status, tasting notes, food pairings, AI advice, storage details, and tasting journal entries, then ranks matches with OpenAI embeddings plus small keyword/readiness/rating boosts.
+
+If the embedding endpoint, OpenAI key, or network is unavailable, the UI falls back to the existing keyword search and shows a subtle fallback note.
