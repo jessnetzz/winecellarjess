@@ -1,4 +1,5 @@
 import DrinkStatusBadge from './DrinkStatusBadge';
+import Icon from './Icon';
 import { NaturalLanguageSearchMatch, SortConfig, Wine, WineSortKey } from '../types/wine';
 import { formatCurrency, formatRating } from '../utils/formatters';
 import { getSearchMatchLabel } from '../utils/searchResultDisplay';
@@ -11,6 +12,7 @@ interface CollectionTableProps {
   onSortChange: (sort: SortConfig) => void;
   onSelectWine: (wine: Wine) => void;
   onEditWine: (wine: Wine) => void;
+  onDeleteWine: (wine: Wine) => void;
 }
 
 const columns: Array<{ label: string; key?: WineSortKey }> = [
@@ -34,6 +36,7 @@ export default function CollectionTable({
   onSortChange,
   onSelectWine,
   onEditWine,
+  onDeleteWine,
 }: CollectionTableProps) {
   const toggleSort = (key: WineSortKey) => {
     onSortChange({
@@ -107,9 +110,20 @@ export default function CollectionTable({
                   <td className="table-td">{formatCurrency(wine.purchasePrice)}</td>
                   <td className="table-td">{formatRating(wine.personalRating)}</td>
                   <td className="table-td">
-                    <button className="ghost-button" type="button" onClick={() => onEditWine(wine)}>
-                      Edit
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button className="ghost-button" type="button" onClick={() => onEditWine(wine)}>
+                        Edit
+                      </button>
+                      <button
+                        className="quick-delete-button static opacity-100"
+                        type="button"
+                        aria-label={`Delete bottle: ${wine.vintage} ${wine.name}`}
+                        title="Delete bottle"
+                        onClick={() => onDeleteWine(wine)}
+                      >
+                        <Icon name="trash" className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

@@ -12,6 +12,7 @@ interface CollectionCardsProps {
   searchQuery?: string;
   onSelectWine: (wine: Wine) => void;
   onEditWine: (wine: Wine) => void;
+  onDeleteWine: (wine: Wine) => void;
 }
 
 export default function CollectionCards({
@@ -21,6 +22,7 @@ export default function CollectionCards({
   searchQuery = '',
   onSelectWine,
   onEditWine,
+  onDeleteWine,
 }: CollectionCardsProps) {
   if (!wines.length) {
     return (
@@ -48,6 +50,15 @@ export default function CollectionCards({
             key={wine.id}
             className={`wine-card group ${isFeatured ? 'ring-2 ring-gold/45' : ''}`}
           >
+            <button
+              className="quick-delete-button"
+              type="button"
+              aria-label={`Delete bottle: ${wine.vintage} ${wine.name}`}
+              title="Delete bottle"
+              onClick={() => onDeleteWine(wine)}
+            >
+              <Icon name="trash" className="h-4 w-4" />
+            </button>
             <button className="relative z-10 block w-full text-left" type="button" onClick={() => onSelectWine(wine)}>
               <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-4 p-4 sm:grid-cols-[132px_minmax(0,1fr)]">
                 <BottleImage imageUrl={wine.imageUrl} name={wine.name} producer={wine.producer} vintage={wine.vintage} />

@@ -19,6 +19,7 @@ interface SearchResultsSectionProps {
   onSortChange: (sort: SortConfig) => void;
   onSelectWine: (wine: Wine) => void;
   onEditWine: (wine: Wine) => void;
+  onDeleteWine: (wine: Wine) => void;
 }
 
 function SearchEmptyState({ query, onClearSearch }: Pick<SearchResultsSectionProps, 'query' | 'onClearSearch'>) {
@@ -78,14 +79,25 @@ function BestMatchCard({
   match,
   query,
   onSelectWine,
+  onDeleteWine,
 }: {
   wine: Wine;
   match?: NaturalLanguageSearchMatch;
   query: string;
   onSelectWine: (wine: Wine) => void;
+  onDeleteWine: (wine: Wine) => void;
 }) {
   return (
     <article className="best-match-card">
+      <button
+        className="quick-delete-button"
+        type="button"
+        aria-label={`Delete bottle: ${wine.vintage} ${wine.name}`}
+        title="Delete bottle"
+        onClick={() => onDeleteWine(wine)}
+      >
+        <Icon name="trash" className="h-4 w-4" />
+      </button>
       <div className="grid gap-5 p-5 sm:grid-cols-[164px_minmax(0,1fr)] sm:p-6">
         <button className="text-left" type="button" onClick={() => onSelectWine(wine)}>
           <BottleImage imageUrl={wine.imageUrl} name={wine.name} producer={wine.producer} vintage={wine.vintage} />
@@ -140,6 +152,7 @@ export default function SearchResultsSection({
   onSortChange,
   onSelectWine,
   onEditWine,
+  onDeleteWine,
 }: SearchResultsSectionProps) {
   const bestMatch = wines[0];
   const otherMatches = bestMatch ? wines.slice(1) : [];
@@ -166,6 +179,7 @@ export default function SearchResultsSection({
             match={searchMatches?.get(bestMatch.id)}
             query={query}
             onSelectWine={onSelectWine}
+            onDeleteWine={onDeleteWine}
           />
         </section>
       ) : (
@@ -189,6 +203,7 @@ export default function SearchResultsSection({
               searchQuery={query}
               onSelectWine={onSelectWine}
               onEditWine={onEditWine}
+              onDeleteWine={onDeleteWine}
             />
           </div>
           {viewMode === 'table' ? (
@@ -200,6 +215,7 @@ export default function SearchResultsSection({
                 onSortChange={onSortChange}
                 onSelectWine={onSelectWine}
                 onEditWine={onEditWine}
+                onDeleteWine={onDeleteWine}
               />
             </div>
           ) : null}

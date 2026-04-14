@@ -397,6 +397,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                   onSortChange={setSort}
                   onSelectWine={(wine) => setSelectedWineId(wine.id)}
                   onEditWine={openEdit}
+                  onDeleteWine={(wine) => setDeleteTarget(wine)}
                 />
               ) : (
                 <>
@@ -416,6 +417,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                       wines={filteredWines}
                       onSelectWine={(wine) => setSelectedWineId(wine.id)}
                       onEditWine={openEdit}
+                      onDeleteWine={(wine) => setDeleteTarget(wine)}
                     />
                   </div>
                   {viewMode === 'table' ? (
@@ -426,6 +428,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                         onSortChange={setSort}
                         onSelectWine={(wine) => setSelectedWineId(wine.id)}
                         onEditWine={openEdit}
+                        onDeleteWine={(wine) => setDeleteTarget(wine)}
                       />
                     </div>
                   ) : null}
@@ -490,7 +493,13 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
         ) : null}
       </Modal>
 
-      <Modal title="Delete wine?" isOpen={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} size="md">
+      <Modal
+        title="Remove this bottle?"
+        description="This will permanently remove it from your cellar."
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        size="md"
+      >
         {deleteTarget ? (
           <div className="p-5">
             <p className="text-sm leading-6 text-smoke">

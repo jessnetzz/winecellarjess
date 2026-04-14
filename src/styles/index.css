@@ -335,6 +335,10 @@ select:focus-visible {
     @apply text-ink;
   }
 
+  .quick-delete-button {
+    @apply absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-md border border-clay/15 bg-white/85 text-clay shadow-sm opacity-100 backdrop-blur transition duration-300 ease-out hover:-translate-y-px hover:border-clay/30 hover:bg-clay hover:text-white hover:shadow-subtle active:translate-y-0 sm:opacity-0 sm:group-hover:opacity-100;
+  }
+
   .search-results-mode {
     animation: fade-up 220ms ease-out;
   }
@@ -467,6 +471,7 @@ select:focus-visible {
   .wine-card *,
   .drink-status-badge,
   .ai-surface,
+  .quick-delete-button,
   .nav-item,
   .premium-button,
   .secondary-button,
@@ -486,6 +491,7 @@ select:focus-visible {
   .premium-button:hover,
   .secondary-button:hover,
   .ghost-button:hover,
+  .quick-delete-button:hover,
   .nav-item:hover {
     transform: none !important;
   }
