@@ -7,9 +7,10 @@ export type AuthMode = 'sign-in' | 'sign-up';
 interface AuthScreenProps {
   initialMode?: AuthMode;
   onBackToLanding?: () => void;
+  onModeChange?: (mode: AuthMode) => void;
 }
 
-export default function AuthScreen({ initialMode = 'sign-in', onBackToLanding }: AuthScreenProps) {
+export default function AuthScreen({ initialMode = 'sign-in', onBackToLanding, onModeChange }: AuthScreenProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -122,9 +123,11 @@ export default function AuthScreen({ initialMode = 'sign-in', onBackToLanding }:
             className="ghost-button mt-4 w-full"
             type="button"
             onClick={() => {
-              setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in');
+              const nextMode = mode === 'sign-in' ? 'sign-up' : 'sign-in';
+              setMode(nextMode);
               setError(null);
               setMessage(null);
+              onModeChange?.(nextMode);
             }}
           >
             {mode === 'sign-in' ? 'Need an account? Sign up' : 'Already have an account? Sign in'}

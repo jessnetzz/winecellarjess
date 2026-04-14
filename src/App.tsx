@@ -1,5 +1,5 @@
 import { User } from '@supabase/supabase-js';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AppShell from './components/AppShell';
 import AuthScreen, { AuthMode } from './components/AuthScreen';
 import CellarPriorities from './components/CellarPriorities';
@@ -17,6 +17,7 @@ import WineDetail from './components/WineDetail';
 import WineForm from './components/WineForm';
 import { useAuth } from './hooks/useAuth';
 import { usePersistentWines } from './hooks/usePersistentWines';
+import { AppRoute, useRoute } from './hooks/useRoute';
 import { authService } from './services/authService';
 import { SortConfig, TastingLogEntry, Wine, WineFilters } from './types/wine';
 import { getDrinkabilityInfo } from './utils/drinkWindow';
@@ -99,6 +100,14 @@ function LoadingScreen() {
       </div>
     </div>
   );
+}
+
+function RouteRedirect({ to, replace }: { to: AppRoute; replace: (route: AppRoute) => void }) {
+  useEffect(() => {
+    replace(to);
+  }, [replace, to]);
+
+  return <LoadingScreen />;
 }
 
 function LocalImportBanner({
@@ -395,11 +404,25 @@ function AuthenticatedCellar({ user }: { user: User }) {
 
 export default function App() {
   const { user, isLoading } = useAuth();
-  const [authMode, setAuthMode] = useState<AuthMode | null>(null);
+  const { route, navigate, replace } = useRoute();
 
   if (isLoading) return <LoadingScreen />;
-  if (!user && !authMode) return <LandingPage onAuthEntry={setAuthMode} />;
-  if (!user) return <AuthScreen initialMode={authMode ?? 'sign-in'} onBackToLanding={() => setAuthMode(null)} />;
 
-  return <AuthenticatedCellar user={user} />;
+  if (user) {
+    if (route !== '/app') return <RouteRedirect to="/app" replace={replace} />;
+    return <AuthenticatedCellar user={user} />;
+  }
+
+  if (route === '/app') return <RouteRedirect to="/login" replace={replace} />;
+  if (route === '/login' || route === '/signup') {
+    return (
+      <AuthScreen
+        initialMode={route === '/signup' ? 'sign-up' : 'sign-in'}
+        onBackToLanding={() => navigate('/')}
+        onModeChange={(mode: AuthMode) => navigate(mode === 'sign-up' ? '/signup' : '/login')}
+      />
+    );
+  }
+
+  return <LandingPage onAuthEntry={(mode) => navigate(mode === 'sign-up' ? '/signup' : '/login')} />;
 }
