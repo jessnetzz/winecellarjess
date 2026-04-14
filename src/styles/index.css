@@ -54,6 +54,16 @@ select:focus-visible {
   background: rgba(185, 142, 69, 0.35);
 }
 
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
 @layer components {
   .app-shell {
     @apply relative min-h-screen bg-paper text-ink;

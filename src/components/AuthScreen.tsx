@@ -1,16 +1,27 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { authService } from '../services/authService';
 import { isSupabaseConfigured } from '../services/supabaseClient';
 
-type AuthMode = 'sign-in' | 'sign-up';
+export type AuthMode = 'sign-in' | 'sign-up';
 
-export default function AuthScreen() {
-  const [mode, setMode] = useState<AuthMode>('sign-in');
+interface AuthScreenProps {
+  initialMode?: AuthMode;
+  onBackToLanding?: () => void;
+}
+
+export default function AuthScreen({ initialMode = 'sign-in', onBackToLanding }: AuthScreenProps) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMode(initialMode);
+    setError(null);
+    setMessage(null);
+  }, [initialMode]);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -50,8 +61,13 @@ export default function AuthScreen() {
     <div className="app-shell flex min-h-screen items-center justify-center px-4 py-10">
       <section className="grid w-full max-w-5xl overflow-hidden rounded-lg border border-ink/10 bg-white shadow-cellar lg:grid-cols-[1fr_440px]">
         <div className="bg-paper p-8 sm:p-12">
-          <p className="field-label text-vine">Private cellar</p>
-          <h1 className="mt-4 font-serif text-5xl font-bold leading-tight text-ink">Wine Cellar</h1>
+          {onBackToLanding ? (
+            <button className="ghost-button -ml-3 mb-6" type="button" onClick={onBackToLanding}>
+              Back to the welcome page
+            </button>
+          ) : null}
+          <p className="field-label text-vine">Okay, Just a Bottle</p>
+          <h1 className="mt-4 font-serif text-5xl font-bold leading-tight text-ink">Your cellar is waiting</h1>
           <p className="mt-5 max-w-xl text-base leading-7 text-smoke">
             Sign in to keep your collection, tasting notes, storage map, and drinking windows synced across your own devices.
           </p>

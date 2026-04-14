@@ -1,7 +1,7 @@
 import { User } from '@supabase/supabase-js';
 import { useMemo, useState } from 'react';
 import AppShell from './components/AppShell';
-import AuthScreen from './components/AuthScreen';
+import AuthScreen, { AuthMode } from './components/AuthScreen';
 import CellarPriorities from './components/CellarPriorities';
 import CellarStats from './components/CellarStats';
 import CollectionCards from './components/CollectionCards';
@@ -9,6 +9,7 @@ import CollectionTable from './components/CollectionTable';
 import Dashboard from './components/Dashboard';
 import FiltersPanel from './components/FiltersPanel';
 import ImportExportTools from './components/ImportExportTools';
+import LandingPage from './components/LandingPage';
 import Modal from './components/Modal';
 import StorageLocationView from './components/StorageLocationView';
 import TonightsBottleCard from './components/TonightsBottleCard';
@@ -394,9 +395,11 @@ function AuthenticatedCellar({ user }: { user: User }) {
 
 export default function App() {
   const { user, isLoading } = useAuth();
+  const [authMode, setAuthMode] = useState<AuthMode | null>(null);
 
   if (isLoading) return <LoadingScreen />;
-  if (!user) return <AuthScreen />;
+  if (!user && !authMode) return <LandingPage onAuthEntry={setAuthMode} />;
+  if (!user) return <AuthScreen initialMode={authMode ?? 'sign-in'} onBackToLanding={() => setAuthMode(null)} />;
 
   return <AuthenticatedCellar user={user} />;
 }
