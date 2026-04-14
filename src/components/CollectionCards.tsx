@@ -1,16 +1,35 @@
 import BottleImage from './BottleImage';
 import DrinkStatusBadge from './DrinkStatusBadge';
 import Icon from './Icon';
-import { Wine } from '../types/wine';
+import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
 import { formatCurrency, formatRating } from '../utils/formatters';
 
 interface CollectionCardsProps {
   wines: Wine[];
+  searchMatches?: Map<string, NaturalLanguageSearchMatch>;
+  featuredWineId?: string;
   onSelectWine: (wine: Wine) => void;
   onEditWine: (wine: Wine) => void;
 }
 
-export default function CollectionCards({ wines, onSelectWine, onEditWine }: CollectionCardsProps) {
+function getMatchChips(match: NaturalLanguageSearchMatch) {
+  const chips = [];
+
+  if (match.keywordScore > 0.08) chips.push('Exact text');
+  if (match.semanticScore > 0.58) chips.push('AI meaning');
+  if (match.readinessBoost > 0) chips.push('Drink window');
+  if (match.qualityBoost > 0) chips.push('Rating signal');
+
+  return chips.length ? chips : ['Cellar context'];
+}
+
+export default function CollectionCards({
+  wines,
+  searchMatches,
+  featuredWineId,
+  onSelectWine,
+  onEditWine,
+}: CollectionCardsProps) {
   if (!wines.length) {
     return (
       <section className="panel p-10 text-center">
@@ -28,53 +47,76 @@ export default function CollectionCards({ wines, onSelectWine, onEditWine }: Col
 
   return (
     <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-      {wines.map((wine) => (
-        <article
-          key={wine.id}
-          className="wine-card group"
-        >
-          <button className="relative z-10 block w-full text-left" type="button" onClick={() => onSelectWine(wine)}>
-            <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-4 p-4 sm:grid-cols-[132px_minmax(0,1fr)]">
-              <BottleImage imageUrl={wine.imageUrl} name={wine.name} producer={wine.producer} vintage={wine.vintage} />
-              <div className="min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="section-kicker">{wine.style}</p>
-                  <DrinkStatusBadge wine={wine} compact />
-                </div>
-                <h3 className="mt-3 line-clamp-2 font-serif text-2xl font-bold leading-tight text-ink group-hover:text-vine">
-                  {wine.name}
-                </h3>
-                <p className="wine-card-meta mt-2 truncate text-sm font-semibold text-smoke">
-                  {wine.producer} · {wine.vintage}
-                </p>
-                <p className="wine-card-meta mt-1 truncate text-sm text-smoke">{wine.region}, {wine.country}</p>
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <div className="wine-card-peek rounded-md bg-paper px-3 py-2">
-                    <span className="block field-label">Qty</span>
-                    <span className="font-bold text-ink">{wine.quantity}</span>
+      {wines.map((wine) => {
+        const match = searchMatches?.get(wine.id);
+        const isFeatured = Boolean(match && featuredWineId === wine.id);
+
+        return (
+          <article
+            key={wine.id}
+            className={`wine-card group ${isFeatured ? 'ring-2 ring-gold/45' : ''}`}
+          >
+            <button className="relative z-10 block w-full text-left" type="button" onClick={() => onSelectWine(wine)}>
+              <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-4 p-4 sm:grid-cols-[132px_minmax(0,1fr)]">
+                <BottleImage imageUrl={wine.imageUrl} name={wine.name} producer={wine.producer} vintage={wine.vintage} />
+                <div className="min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="section-kicker">{wine.style}</p>
+                    <DrinkStatusBadge wine={wine} compact />
                   </div>
-                  <div className="wine-card-peek rounded-md bg-paper px-3 py-2">
-                    <span className="block field-label">Rating</span>
-                    <span className="font-bold text-ink">{formatRating(wine.personalRating)}</span>
+                  {isFeatured ? (
+                    <span className="mt-3 inline-flex rounded-md bg-gold/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">
+                      Best match
+                    </span>
+                  ) : null}
+                  <h3 className="mt-3 line-clamp-2 font-serif text-2xl font-bold leading-tight text-ink group-hover:text-vine">
+                    {wine.name}
+                  </h3>
+                  <p className="wine-card-meta mt-2 truncate text-sm font-semibold text-smoke">
+                    {wine.producer} · {wine.vintage}
+                  </p>
+                  <p className="wine-card-meta mt-1 truncate text-sm text-smoke">{wine.region}, {wine.country}</p>
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                    <div className="wine-card-peek rounded-md bg-paper px-3 py-2">
+                      <span className="block field-label">Qty</span>
+                      <span className="font-bold text-ink">{wine.quantity}</span>
+                    </div>
+                    <div className="wine-card-peek rounded-md bg-paper px-3 py-2">
+                      <span className="block field-label">Rating</span>
+                      <span className="font-bold text-ink">{formatRating(wine.personalRating)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </button>
-          <div className="relative z-10 flex items-center justify-between gap-3 border-t border-ink/10 bg-porcelain px-4 py-3 transition duration-300 ease-out group-hover:bg-white/90">
-            <span className="truncate text-xs font-semibold text-smoke">
-              {wine.storageLocation.displayName} · {formatCurrency(wine.marketValue)}
-            </span>
-            <button
-              className="ghost-button min-h-10 px-3 py-1.5 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-              type="button"
-              onClick={() => onEditWine(wine)}
-            >
-              Edit
+              {match ? (
+                <div className="mx-4 mb-4 rounded-lg border border-lavender/25 bg-lavender/10 p-3">
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-plum">Why this matched</p>
+                  <p className="mt-1 text-sm leading-5 text-ink">{match.reason}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {getMatchChips(match).map((chip) => (
+                      <span key={chip} className="rounded-md bg-white/80 px-2 py-1 text-[11px] font-semibold text-smoke shadow-sm">
+                        {chip}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </button>
-          </div>
-        </article>
-      ))}
+            <div className="relative z-10 flex items-center justify-between gap-3 border-t border-ink/10 bg-porcelain px-4 py-3 transition duration-300 ease-out group-hover:bg-white/90">
+              <span className="truncate text-xs font-semibold text-smoke">
+                {wine.storageLocation.displayName} · {formatCurrency(wine.marketValue)}
+              </span>
+              <button
+                className="ghost-button min-h-10 px-3 py-1.5 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                type="button"
+                onClick={() => onEditWine(wine)}
+              >
+                Edit
+              </button>
+            </div>
+          </article>
+        );
+      })}
     </div>
   );
 }

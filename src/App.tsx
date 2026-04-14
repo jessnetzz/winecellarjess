@@ -184,16 +184,23 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
     error: string | null;
   }>({ query: '', matches: [], isLoading: false, error: null });
 
+  const searchQuery = filters.query.trim();
   const activeNaturalSearch =
-    naturalSearch.query === filters.query.trim() && naturalSearch.matches.length > 0 && !naturalSearch.error;
+    naturalSearch.query === searchQuery && naturalSearch.matches.length > 0 && !naturalSearch.error;
   const naturalSearchIds = useMemo(
     () => activeNaturalSearch ? new Set(naturalSearch.matches.map((match) => match.id)) : undefined,
+    [activeNaturalSearch, naturalSearch.matches],
+  );
+  const searchMatchById = useMemo(
+    () => activeNaturalSearch ? new Map(naturalSearch.matches.map((match) => [match.id, match])) : undefined,
     [activeNaturalSearch, naturalSearch.matches],
   );
   const filteredWines = useMemo(() => {
     const filtered = applyFilters(wines, filters, naturalSearchIds);
     return activeNaturalSearch ? applySemanticOrder(filtered, naturalSearch.matches) : applySort(filtered, sort);
   }, [activeNaturalSearch, naturalSearch.matches, naturalSearchIds, wines, filters, sort]);
+  const featuredSearchWineId = activeNaturalSearch ? filteredWines[0]?.id : undefined;
+  const isSearchingByText = searchQuery.length > 0;
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
 
   useEffect(() => {
@@ -257,6 +264,11 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
     setIsFormOpen(true);
   };
 
+  const clearSearch = () => {
+    setFilters((current) => ({ ...current, query: '' }));
+    setNaturalSearch({ query: '', matches: [], isLoading: false, error: null });
+  };
+
   const handleAddTastingEntry = async (wine: Wine, entry: TastingLogEntry) => {
     const updated = await addTastingEntry(wine, entry);
     if (updated) setSelectedWineId(updated.id);
@@ -279,7 +291,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
         naturalSearch.isLoading
           ? 'Reading your cellar by mood, pairing, occasion, and notes...'
           : activeNaturalSearch
-            ? `${naturalSearch.matches.length} AI-ranked match${naturalSearch.matches.length === 1 ? '' : 'es'}`
+            ? `Showing AI-ranked bottles for "${searchQuery}".`
             : naturalSearch.error && filters.query.trim().length >= 3
               ? 'AI search is unavailable, so keyword search is still working.'
               : undefined
@@ -368,25 +380,59 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
             <FiltersPanel filters={filters} sort={sort} wines={wines} onFiltersChange={setFilters} onSortChange={setSort} />
 
             <section id="collection" className="scroll-mt-32">
-              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="section-kicker">Collection</p>
-                  <h2 className="mt-2 font-serif text-3xl font-bold text-ink">
-                    {filteredWines.length} wine{filteredWines.length === 1 ? '' : 's'} in view
-                  </h2>
+              <div className={`mb-5 rounded-lg border p-4 sm:p-5 ${
+                isSearchingByText
+                  ? 'border-lavender/30 bg-lavender/10 shadow-subtle'
+                  : 'border-transparent bg-transparent p-0 sm:p-0'
+              }`}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="section-kicker">{isSearchingByText ? 'Search results' : 'Collection'}</p>
+                    <h2 className="mt-2 font-serif text-3xl font-bold text-ink">
+                      {isSearchingByText
+                        ? `${filteredWines.length} bottle${filteredWines.length === 1 ? '' : 's'} match "${searchQuery}"`
+                        : `${filteredWines.length} wine${filteredWines.length === 1 ? '' : 's'} in view`}
+                    </h2>
+                    {isSearchingByText ? (
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-smoke">
+                        {naturalSearch.isLoading
+                          ? 'Ranking bottles by meaning, notes, pairings, and cellar timing.'
+                          : activeNaturalSearch
+                            ? 'Ranked by relevance, with exact text matches, semantic meaning, drink readiness, and rating signals blended in.'
+                            : naturalSearch.error
+                              ? 'AI ranking is unavailable right now, so these are the keyword matches from your cellar.'
+                              : 'Keyword matches are shown while the AI result warms up.'}
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <p className="text-sm text-smoke">
+                      {activeNaturalSearch ? 'Best matches first' : `Sorted by ${sort.key} ${sort.direction === 'asc' ? 'ascending' : 'descending'}`}
+                    </p>
+                    {isSearchingByText ? (
+                      <button className="ghost-button bg-white/65" type="button" onClick={clearSearch}>
+                        Clear search
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
-                <p className="text-sm text-smoke">
-                  Sorted by {sort.key} {sort.direction === 'asc' ? 'ascending' : 'descending'}
-                </p>
               </div>
               <div className={viewMode === 'cards' ? '' : 'lg:hidden'}>
-                <CollectionCards wines={filteredWines} onSelectWine={(wine) => setSelectedWineId(wine.id)} onEditWine={openEdit} />
+                <CollectionCards
+                  wines={filteredWines}
+                  searchMatches={searchMatchById}
+                  featuredWineId={featuredSearchWineId}
+                  onSelectWine={(wine) => setSelectedWineId(wine.id)}
+                  onEditWine={openEdit}
+                />
               </div>
               {viewMode === 'table' ? (
                 <div className="hidden lg:block">
                   <CollectionTable
                     wines={filteredWines}
                     sort={sort}
+                    searchMatches={searchMatchById}
+                    featuredWineId={featuredSearchWineId}
                     onSortChange={setSort}
                     onSelectWine={(wine) => setSelectedWineId(wine.id)}
                     onEditWine={openEdit}
