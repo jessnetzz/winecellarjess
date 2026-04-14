@@ -3,30 +3,22 @@ import DrinkStatusBadge from './DrinkStatusBadge';
 import Icon from './Icon';
 import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
 import { formatCurrency, formatRating } from '../utils/formatters';
+import { getSearchMatchChips } from '../utils/searchResultDisplay';
 
 interface CollectionCardsProps {
   wines: Wine[];
   searchMatches?: Map<string, NaturalLanguageSearchMatch>;
   featuredWineId?: string;
+  searchQuery?: string;
   onSelectWine: (wine: Wine) => void;
   onEditWine: (wine: Wine) => void;
-}
-
-function getMatchChips(match: NaturalLanguageSearchMatch) {
-  const chips = [];
-
-  if (match.keywordScore > 0.08) chips.push('Exact text');
-  if (match.semanticScore > 0.58) chips.push('AI meaning');
-  if (match.readinessBoost > 0) chips.push('Drink window');
-  if (match.qualityBoost > 0) chips.push('Rating signal');
-
-  return chips.length ? chips : ['Cellar context'];
 }
 
 export default function CollectionCards({
   wines,
   searchMatches,
   featuredWineId,
+  searchQuery = '',
   onSelectWine,
   onEditWine,
 }: CollectionCardsProps) {
@@ -93,7 +85,7 @@ export default function CollectionCards({
                   <p className="text-[10px] font-bold uppercase tracking-wide text-plum">Why this matched</p>
                   <p className="mt-1 text-sm leading-5 text-ink">{match.reason}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {getMatchChips(match).map((chip) => (
+                    {getSearchMatchChips(match, wine, searchQuery).map((chip) => (
                       <span key={chip} className="rounded-md bg-white/80 px-2 py-1 text-[11px] font-semibold text-smoke shadow-sm">
                         {chip}
                       </span>

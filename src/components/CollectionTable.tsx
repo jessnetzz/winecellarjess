@@ -1,6 +1,7 @@
 import DrinkStatusBadge from './DrinkStatusBadge';
 import { NaturalLanguageSearchMatch, SortConfig, Wine, WineSortKey } from '../types/wine';
 import { formatCurrency, formatRating } from '../utils/formatters';
+import { getSearchMatchLabel } from '../utils/searchResultDisplay';
 
 interface CollectionTableProps {
   wines: Wine[];
@@ -24,13 +25,6 @@ const columns: Array<{ label: string; key?: WineSortKey }> = [
   { label: 'Rating', key: 'personalRating' },
   { label: 'Actions' },
 ];
-
-function getMatchLabel(match: NaturalLanguageSearchMatch) {
-  if (match.keywordScore > 0.08 && match.semanticScore > 0.58) return 'Exact + AI match';
-  if (match.keywordScore > 0.08) return 'Exact match';
-  if (match.readinessBoost > 0) return 'Drink-window match';
-  return 'AI meaning match';
-}
 
 export default function CollectionTable({
   wines,
@@ -95,7 +89,7 @@ export default function CollectionTable({
                       <span className="mt-1 block text-xs uppercase text-smoke">{wine.appellation}</span>
                       {match ? (
                         <span className="mt-3 block max-w-sm rounded-lg border border-lavender/25 bg-lavender/10 px-3 py-2 text-xs leading-5 text-ink">
-                          <span className="block font-bold uppercase tracking-wide text-plum">{getMatchLabel(match)}</span>
+                          <span className="block font-bold uppercase tracking-wide text-plum">{getSearchMatchLabel(match)}</span>
                           {match.reason}
                         </span>
                       ) : null}

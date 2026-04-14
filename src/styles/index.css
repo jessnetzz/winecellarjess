@@ -335,6 +335,43 @@ select:focus-visible {
     @apply text-ink;
   }
 
+  .search-results-mode {
+    animation: fade-up 220ms ease-out;
+  }
+
+  .search-summary-bar {
+    @apply relative flex flex-col gap-4 overflow-hidden rounded-lg border border-lavender/25 bg-porcelain/95 p-4 shadow-subtle sm:flex-row sm:items-center sm:justify-between sm:p-5;
+    background:
+      radial-gradient(circle at 92% 10%, rgba(185, 162, 197, 0.18), transparent 28%),
+      linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(248, 242, 232, 0.94));
+  }
+
+  .search-summary-bar::after {
+    content: '✦';
+    @apply pointer-events-none absolute right-5 top-4 text-xs text-lavender/55;
+  }
+
+  .search-results-shell {
+    @apply rounded-lg border border-[#E7DCCB] bg-porcelain/90 shadow-subtle;
+  }
+
+  .best-match-card {
+    @apply interactive-surface relative overflow-hidden rounded-lg border border-gold/35 bg-white shadow-lift hover:-translate-y-0.5 hover:border-gold/50;
+    background:
+      radial-gradient(circle at 88% 8%, rgba(185, 142, 69, 0.14), transparent 26%),
+      linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(248, 242, 232, 0.9));
+  }
+
+  .best-match-card::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0 opacity-70;
+    background: linear-gradient(135deg, rgba(185, 162, 197, 0.08), transparent 44%);
+  }
+
+  .best-match-card > * {
+    @apply relative z-10;
+  }
+
   .drink-status-badge {
     @apply relative transition duration-300 ease-out hover:-translate-y-px hover:shadow-sm;
   }
@@ -445,6 +482,7 @@ select:focus-visible {
   .priority-card:hover,
   .storage-card:hover,
   .tasting-note-card:hover,
+  .best-match-card:hover,
   .premium-button:hover,
   .secondary-button:hover,
   .ghost-button:hover,

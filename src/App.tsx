@@ -11,6 +11,7 @@ import FiltersPanel from './components/FiltersPanel';
 import ImportExportTools from './components/ImportExportTools';
 import LandingPage from './components/LandingPage';
 import Modal from './components/Modal';
+import SearchResultsSection from './components/SearchResultsSection';
 import StorageLocationView from './components/StorageLocationView';
 import TonightsBottleCard from './components/TonightsBottleCard';
 import WineDetail from './components/WineDetail';
@@ -199,7 +200,6 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
     const filtered = applyFilters(wines, filters, naturalSearchIds);
     return activeNaturalSearch ? applySemanticOrder(filtered, naturalSearch.matches) : applySort(filtered, sort);
   }, [activeNaturalSearch, naturalSearch.matches, naturalSearchIds, wines, filters, sort]);
-  const featuredSearchWineId = activeNaturalSearch ? filteredWines[0]?.id : undefined;
   const isSearchingByText = searchQuery.length > 0;
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
 
@@ -371,74 +371,66 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
 
         {wines.length ? (
           <>
-            <section id="dashboard" className="scroll-mt-32">
-              <Dashboard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
-            </section>
-            <section id="drink-now" className="scroll-mt-32">
-              <CellarPriorities wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
-            </section>
+            {!isSearchingByText ? (
+              <>
+                <section id="dashboard" className="scroll-mt-32">
+                  <Dashboard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+                </section>
+                <section id="drink-now" className="scroll-mt-32">
+                  <CellarPriorities wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+                </section>
+              </>
+            ) : null}
             <FiltersPanel filters={filters} sort={sort} wines={wines} onFiltersChange={setFilters} onSortChange={setSort} />
 
             <section id="collection" className="scroll-mt-32">
-              <div className={`mb-5 rounded-lg border p-4 sm:p-5 ${
-                isSearchingByText
-                  ? 'border-lavender/30 bg-lavender/10 shadow-subtle'
-                  : 'border-transparent bg-transparent p-0 sm:p-0'
-              }`}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="section-kicker">{isSearchingByText ? 'Search results' : 'Collection'}</p>
-                    <h2 className="mt-2 font-serif text-3xl font-bold text-ink">
-                      {isSearchingByText
-                        ? `${filteredWines.length} bottle${filteredWines.length === 1 ? '' : 's'} match "${searchQuery}"`
-                        : `${filteredWines.length} wine${filteredWines.length === 1 ? '' : 's'} in view`}
-                    </h2>
-                    {isSearchingByText ? (
-                      <p className="mt-2 max-w-2xl text-sm leading-6 text-smoke">
-                        {naturalSearch.isLoading
-                          ? 'Ranking bottles by meaning, notes, pairings, and cellar timing.'
-                          : activeNaturalSearch
-                            ? 'Ranked by relevance, with exact text matches, semantic meaning, drink readiness, and rating signals blended in.'
-                            : naturalSearch.error
-                              ? 'AI ranking is unavailable right now, so these are the keyword matches from your cellar.'
-                              : 'Keyword matches are shown while the AI result warms up.'}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <p className="text-sm text-smoke">
-                      {activeNaturalSearch ? 'Best matches first' : `Sorted by ${sort.key} ${sort.direction === 'asc' ? 'ascending' : 'descending'}`}
-                    </p>
-                    {isSearchingByText ? (
-                      <button className="ghost-button bg-white/65" type="button" onClick={clearSearch}>
-                        Clear search
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-              <div className={viewMode === 'cards' ? '' : 'lg:hidden'}>
-                <CollectionCards
+              {isSearchingByText ? (
+                <SearchResultsSection
+                  query={searchQuery}
                   wines={filteredWines}
                   searchMatches={searchMatchById}
-                  featuredWineId={featuredSearchWineId}
+                  isLoading={naturalSearch.isLoading}
+                  error={naturalSearch.error}
+                  viewMode={viewMode}
+                  sort={sort}
+                  onClearSearch={clearSearch}
+                  onSortChange={setSort}
                   onSelectWine={(wine) => setSelectedWineId(wine.id)}
                   onEditWine={openEdit}
                 />
-              </div>
-              {viewMode === 'table' ? (
-                <div className="hidden lg:block">
-                  <CollectionTable
-                    wines={filteredWines}
-                    sort={sort}
-                    searchMatches={searchMatchById}
-                    featuredWineId={featuredSearchWineId}
-                    onSortChange={setSort}
-                    onSelectWine={(wine) => setSelectedWineId(wine.id)}
-                    onEditWine={openEdit}
-                  />
-                </div>
-              ) : null}
+              ) : (
+                <>
+                  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <p className="section-kicker">Collection</p>
+                      <h2 className="mt-2 font-serif text-3xl font-bold text-ink">
+                        {filteredWines.length} wine{filteredWines.length === 1 ? '' : 's'} in view
+                      </h2>
+                    </div>
+                    <p className="text-sm text-smoke">
+                      Sorted by {sort.key} {sort.direction === 'asc' ? 'ascending' : 'descending'}
+                    </p>
+                  </div>
+                  <div className={viewMode === 'cards' ? '' : 'lg:hidden'}>
+                    <CollectionCards
+                      wines={filteredWines}
+                      onSelectWine={(wine) => setSelectedWineId(wine.id)}
+                      onEditWine={openEdit}
+                    />
+                  </div>
+                  {viewMode === 'table' ? (
+                    <div className="hidden lg:block">
+                      <CollectionTable
+                        wines={filteredWines}
+                        sort={sort}
+                        onSortChange={setSort}
+                        onSelectWine={(wine) => setSelectedWineId(wine.id)}
+                        onEditWine={openEdit}
+                      />
+                    </div>
+                  ) : null}
+                </>
+              )}
             </section>
 
             <section id="storage" className="scroll-mt-32">
