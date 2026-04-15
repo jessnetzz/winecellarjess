@@ -24,6 +24,7 @@ import { authService } from './services/authService';
 import { searchWinesNaturally } from './services/naturalLanguageSearchService';
 import { NaturalLanguageSearchMatch, SortConfig, TastingLogEntry, Wine, WineFilters } from './types/wine';
 import { getDrinkabilityInfo } from './utils/drinkWindow';
+import { getDailyWineFact } from './utils/dailyWineFact';
 
 type ViewMode = 'cards' | 'table';
 
@@ -201,6 +202,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
     const filtered = applyFilters(wines, filters, naturalSearchIds);
     return activeNaturalSearch ? applySemanticOrder(filtered, naturalSearch.matches) : applySort(filtered, sort);
   }, [activeNaturalSearch, naturalSearch.matches, naturalSearchIds, wines, filters, sort]);
+  const dailyWineFact = useMemo(() => getDailyWineFact(), []);
   const isSearchingByText = searchQuery.length > 0;
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
 
@@ -282,24 +284,46 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
       onSignOut={() => void authService.signOut()}
     >
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
-        <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
-          <div className="min-w-0">
-            <p className="section-kicker">Private cellar</p>
-            <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight">
-              <span className="block">Everything you love</span>
-              <span className="block">about your wines.</span>
-            </h1>
-            <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-smoke sm:mt-5 sm:text-lg sm:leading-8">
-              All in one place—even the little details you forget.
-            </p>
-            <div className="mt-4 grid gap-4 xl:block">
+        <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 xl:min-h-[430px] xl:grid-cols-[minmax(0,1fr)_336px] xl:items-center xl:gap-10">
+          <div className="min-w-0 xl:flex xl:min-h-[360px] xl:max-w-[860px] xl:flex-col xl:justify-center">
+            <div className="xl:max-w-[700px]">
+              <p className="section-kicker">Private cellar</p>
+              <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight">
+                <span className="block">Everything you love</span>
+                <span className="block">about your wines.</span>
+              </h1>
+              <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-smoke sm:mt-5 sm:text-lg sm:leading-8">
+                All in one place—even the little details you forget.
+              </p>
+              <div className={`hero-cellar-note hero-cellar-note--${dailyWineFact.tone} mt-4 max-w-xl`}>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-plum/75">Today&apos;s wine fact</p>
+                  <span className="hero-cellar-note-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" className="hero-cellar-note-sparkle" fill="none">
+                      <path
+                        d="M12 3.5L13.9 10.1L20.5 12L13.9 13.9L12 20.5L10.1 13.9L3.5 12L10.1 10.1L12 3.5Z"
+                        fill="currentColor"
+                      />
+                      <circle cx="12" cy="12" r="1.2" fill="rgba(255,255,255,0.72)" />
+                    </svg>
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-bold uppercase tracking-[0.14em] text-smoke/80">
+                  {dailyWineFact.title}
+                </p>
+                <p className="mt-2 font-serif text-lg leading-7 text-ink/85 sm:text-[1.35rem] sm:leading-8">
+                  {dailyWineFact.body}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-4 sm:mt-5 xl:max-w-[760px]">
               <CellarStats wines={wines} />
               <div className="xl:hidden">
                 <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
               </div>
             </div>
           </div>
-          <div className="hidden xl:block">
+          <div className="hidden xl:block xl:self-center xl:border-l xl:border-[#E7DCCB]/70 xl:pl-6">
             <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
           </div>
         </section>

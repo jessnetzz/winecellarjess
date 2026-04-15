@@ -39,7 +39,7 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
   const scoreBreakdown = wine ? getRecommendationScoreBreakdown(wine, weatherContext) : null;
   const tonightChips = Array.from(
     new Set([...(profile ? getProfileSupportChips(profile, 2) : []), ...((scoreBreakdown?.profileReasons ?? []).slice(0, 2))]),
-  );
+  ).slice(0, 2);
   const tonightRecommendation = useMemo(
     () =>
       wine
@@ -87,52 +87,59 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
   const location = [wine.appellation || wine.region, wine.country].filter(Boolean).join(', ');
 
   return (
-    <section className="tonights-bottle-card" aria-labelledby="tonights-bottle-heading">
-      <div className="flex items-start justify-between gap-4">
+    <section className="tonights-bottle-card space-y-4" aria-labelledby="tonights-bottle-heading">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p id="tonights-bottle-heading" className="section-kicker">Tonight’s Bottle</p>
-          <h2 className="mt-2 font-serif text-2xl font-bold leading-tight text-ink">
+          <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-white/70 px-2.5 py-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
+            <p id="tonights-bottle-heading" className="section-kicker text-[11px] text-plum/85">Tonight’s Bottle</p>
+          </div>
+          <h2 className="mt-2 font-serif text-[1.9rem] font-bold leading-[1.05] text-ink">
             {wine.vintage} {wine.name}
           </h2>
           <p className="mt-2 text-sm font-semibold text-smoke">{wine.producer}</p>
         </div>
-        <span className="shrink-0 rounded-lg bg-gold/15 px-3 py-2 text-lg" aria-hidden="true">🌙</span>
+        <span className="shrink-0 rounded-lg bg-gold/12 px-2.5 py-2 text-base" aria-hidden="true">🌙</span>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <DrinkStatusBadge wine={wine} compact />
-        {location ? <span className="rounded-md bg-white/70 px-2.5 py-1 text-xs font-bold text-smoke">{location}</span> : null}
-        {weatherContextLabel ? (
-          <span className="rounded-md bg-lavender/25 px-2.5 py-1 text-xs font-bold text-plum">
-            {weatherContextLabel}
-          </span>
+        {location ? <span className="rounded-md bg-white/70 px-2.5 py-1 text-xs font-semibold text-smoke">{location}</span> : null}
+      </div>
+      {weatherContextLabel ? (
+        <p className="rounded-md bg-lavender/18 px-2.5 py-1.5 text-xs font-semibold leading-5 text-plum">
+          {weatherContextLabel}
+        </p>
+      ) : null}
+      {!weatherContext && !weatherAttempted ? (
+        <p className="text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>
+      ) : null}
+
+      <div className="border-t border-gold/15 pt-4">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Tonight's note</p>
+        <p className="mt-2 font-serif text-[1.5rem] font-bold leading-[1.1] text-ink">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
+        <p className="mt-2 line-clamp-4 text-sm leading-6 text-ink/90">
+          {tonightRecommendation?.body}
+        </p>
+        {tonightChips.length ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tonightChips.map((chip) => (
+              <span key={chip} className="rounded-md bg-paper px-2.5 py-1 text-[11px] font-semibold text-smoke">
+                {chip}
+              </span>
+            ))}
+          </div>
         ) : null}
       </div>
 
-      <div className="mt-4 rounded-lg border border-gold/20 bg-porcelain/70 p-4">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Tonight's note</p>
-        <p className="mt-2 font-serif text-xl font-bold leading-tight text-ink">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
-        <p className="mt-2 text-sm leading-6 text-ink">{tonightRecommendation?.body}</p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {tonightChips.map((chip) => (
-            <span key={chip} className="rounded-md bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-smoke shadow-sm">
-              {chip}
-            </span>
-          ))}
-        </div>
-      </div>
-      {!weatherContext && !weatherAttempted ? (
-        <p className="mt-2 text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>
-      ) : null}
-
-      <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-2 pt-1">
         {onSelectWine ? (
-          <button className="premium-button" type="button" onClick={() => onSelectWine(wine)}>
+          <button className="premium-button w-full justify-center" type="button" onClick={() => onSelectWine(wine)}>
             View bottle
           </button>
         ) : null}
         {candidates.length > 1 ? (
-          <button className="secondary-button bg-white/80" type="button" onClick={() => setOffset((current) => current + 1)}>
+          <button className="secondary-button w-full justify-center bg-white/80" type="button" onClick={() => setOffset((current) => current + 1)}>
             Show another
           </button>
         ) : null}
