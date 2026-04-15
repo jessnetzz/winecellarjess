@@ -1,8 +1,71 @@
 import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
+import { getDrinkabilityInfo } from './drinkWindow';
 
 function includesAny(source: string, terms: string[]) {
   const normalized = source.toLowerCase();
   return terms.some((term) => normalized.includes(term));
+}
+
+function sentenceCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function compactText(value = '', maxLength = 120) {
+  const clean = value.replace(/\s+/g, ' ').trim();
+  if (clean.length <= maxLength) return clean;
+  return `${clean.slice(0, maxLength).replace(/\s+\S*$/, '')}...`;
+}
+
+function getQueryIntent(query = '') {
+  const normalized = query.toLowerCase();
+
+  if (includesAny(normalized, ['pair', 'food', 'seafood', 'salmon', 'steak', 'pasta', 'cheese', 'dinner'])) {
+    return 'pairing';
+  }
+
+  if (includesAny(normalized, ['friends', 'party', 'company', 'host', 'group', 'celebrate', 'celebration'])) {
+    return 'occasion';
+  }
+
+  if (includesAny(normalized, ['rain', 'snow', 'cozy', 'cold', 'warm', 'night', 'mood', 'quiet', 'comfort'])) {
+    return 'mood';
+  }
+
+  if (includesAny(normalized, ['ready', 'drink now', 'tonight', 'open', 'peak'])) {
+    return 'drink-now';
+  }
+
+  if (includesAny(normalized, ['buttery', 'citrus', 'earthy', 'rich', 'bold', 'bright', 'fresh', 'silky', 'tannin'])) {
+    return 'tasting';
+  }
+
+  return 'general';
+}
+
+function readinessPhrase(wine: Wine) {
+  const status = getDrinkabilityInfo(wine).status;
+
+  if (status === 'Peak window') return 'right in its peak window';
+  if (status === 'Ready to drink') return 'ready to open now';
+  if (status === 'Nearing end of peak') return 'well worth opening soon';
+  if (status === 'Approaching window') return 'just beginning to look interesting';
+  if (status === 'Too young') return 'still a little youthful, but compelling if you want freshness';
+  return 'a bottle to open with a little curiosity';
+}
+
+function stylePhrase(wine: Wine) {
+  if (wine.varietal) return wine.varietal;
+  return wine.style.replace('-', ' ');
+}
+
+function tastingPhrase(wine: Wine) {
+  if (wine.tastingNotes) return compactText(wine.tastingNotes, 96);
+  if (wine.aiAdvice) return compactText(wine.aiAdvice, 96);
+  return '';
+}
+
+function pairingPhrase(wine: Wine) {
+  return wine.foodPairingNotes ? compactText(wine.foodPairingNotes, 96) : '';
 }
 
 export function getSearchMatchLabel(match: NaturalLanguageSearchMatch) {
@@ -35,16 +98,54 @@ export function getSearchMatchChips(match: NaturalLanguageSearchMatch, wine: Win
   return Array.from(new Set(chips.length ? chips : ['Cellar context'])).slice(0, 3);
 }
 
-export function getBestMatchSummary(wine: Wine, match?: NaturalLanguageSearchMatch) {
-  if (match?.reason) return match.reason;
+export function getBestMatchSummary(wine: Wine, match?: NaturalLanguageSearchMatch, query = '') {
+  const intent = getQueryIntent(query);
+  const style = stylePhrase(wine);
+  const readiness = readinessPhrase(wine);
+  const tasting = tastingPhrase(wine);
+  const pairing = pairingPhrase(wine);
+  const region = wine.region || wine.country;
+  const quality = match?.qualityBoost ? 'and the rating signal gives it a little extra pull' : '';
+
+  if (intent === 'pairing' && pairing) {
+    return `This ${style} stands out for "${query}" because its pairing notes already point in that direction. It is ${readiness}, so it feels like an easy bottle to trust at the table.`;
+  }
+
+  if (intent === 'occasion') {
+    return `This feels like the kind of bottle that works well with company: expressive, food-friendly, and not too fussy. It is ${readiness}${quality ? `, ${quality}` : ''}.`;
+  }
+
+  if (intent === 'mood') {
+    return `This ${style} feels right for "${query}": ${region ? `${region} character, ` : ''}${readiness}, and enough personality to suit the moment.`;
+  }
+
+  if (intent === 'drink-now') {
+    return `This bottle rises to the top because it is ${readiness}. It has the strongest cellar timing for what you asked, without needing much overthinking.`;
+  }
+
+  if (intent === 'tasting' && tasting) {
+    return `${sentenceCase(style)} makes sense here because the notes suggest the kind of profile you are after: ${tasting}. It is ${readiness}, which makes the match feel practical as well as tempting.`;
+  }
+
+  if (pairing) {
+    return `This ${style} is a strong pick because it is ${readiness} and its pairing notes give it a clear place at the table.`;
+  }
+
+  if (tasting) {
+    return `This ${style} feels like the best fit because it is ${readiness}, with tasting notes that give the result a little more texture: ${tasting}`;
+  }
+
+  if (match?.reason && !match.reason.toLowerCase().includes('matched cellar details')) {
+    return `${match.reason} It is ${readiness}, which makes it feel like a thoughtful bottle to consider now.`;
+  }
 
   const parts = [
-    wine.varietal || wine.style,
-    wine.region || wine.country,
+    style,
+    region,
     wine.foodPairingNotes || wine.tastingNotes,
   ].filter(Boolean);
 
   return parts.length
-    ? parts.join(' · ')
-    : 'A strong visible result from your current cellar search.';
+    ? `This ${style} feels like the right lead because it is ${readiness}, with enough context from your cellar notes to make it worth opening.`
+    : `This bottle feels like the best place to start: ${readiness}, easy to understand, and a calm fit for what you searched.`;
 }

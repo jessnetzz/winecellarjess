@@ -121,9 +121,12 @@ function BestMatchCard({
           <p className="mt-1 text-sm leading-6 text-smoke">
             {[wine.region, wine.appellation, wine.varietal].filter(Boolean).join(' · ')}
           </p>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-ink">
-            {getBestMatchSummary(wine, match)}
-          </p>
+          <div className="mt-4 max-w-2xl rounded-lg border border-gold/25 bg-porcelain/75 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Sommelier's note</p>
+            <p className="mt-2 text-sm leading-6 text-ink">
+              {getBestMatchSummary(wine, match, query)}
+            </p>
+          </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {(match ? getSearchMatchChips(match, wine, query) : ['Top visible result', `Style: ${wine.varietal || wine.style}`, `Rating: ${formatRating(wine.personalRating)}`]).map((chip) => (
               <span key={chip} className="rounded-md border border-white/80 bg-white/75 px-2.5 py-1 text-xs font-semibold text-smoke shadow-sm">
