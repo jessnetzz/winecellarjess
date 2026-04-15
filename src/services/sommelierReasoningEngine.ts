@@ -319,7 +319,7 @@ function buildDishProfile(queryType: SommelierQueryType, query: string, weatherC
       weight: weatherContext?.temperatureBand === 'cold' ? 'rich' : 'medium',
       texture: weatherContext?.temperatureBand === 'warm' ? 'fresh and light' : 'comforting and layered',
       dominantFlavors: [weatherContext?.mood ?? 'cozy'],
-      needs: weatherContext?.temperatureBand === 'warm' ? ['lift', 'freshness'] : ['depth', 'comfort', 'readiness'],
+      needs: weatherContext?.temperatureBand === 'warm' ? ['lift', 'freshness'] : ['depth', 'comfort'],
       principle: weatherContext?.temperatureBand === 'warm'
         ? 'Warmer evenings usually want wines with freshness, lift, and easy drinkability.'
         : 'Cozier evenings usually want a bottle with warmth, texture, or a little savory depth.',
@@ -462,8 +462,16 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
   }
 
   if (intent === 'mood') {
+    if (context === 'tonight') {
+      return {
+        heading: 'Why tonight',
+        body: `Tonight is more about mood than timing. This ${style} brings ${region ? `${region} character, ` : ''}${wineProfile.texture}, ${wineProfile.fruitProfile} fruit, and the kind of ${wineProfile.finish} that suits the evening.${wink ? ` ${wink}` : ''}`,
+        reasoning,
+      };
+    }
+
     return {
-      heading: context === 'tonight' ? 'Why tonight' : 'Why it fits the mood',
+      heading: 'Why it fits the mood',
       body: `Mood matters: cozy searches usually want texture, darker fruit, or a little savory depth, while warmer moods want lift and freshness. This ${style} brings ${region ? `${region} character, ` : ''}${wineProfile.texture}, ${wineProfile.fruitProfile} fruit, and it is ${readiness}.${wink ? ` ${wink}` : ''}`,
       reasoning,
     };
@@ -486,6 +494,14 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
   }
 
   if (pairing) {
+    if (context === 'tonight') {
+      return {
+        heading: 'Why tonight',
+        body: `This ${style} works for tonight because it has enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to feel right with the weather and the general dinner mood. The style has a clear lane at the table without making timing the whole story.`,
+        reasoning,
+      };
+    }
+
     return {
       heading: 'Why it works',
       body: `This ${style} is a strong pick because it is ${readiness} and has enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to make sense with food. The pairing notes give it a clear lane at the table without overcomplicating the bottle.`,
@@ -503,7 +519,9 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
 
   return {
     heading: context === 'tonight' ? 'Why tonight' : 'Why it works',
-    body: `This ${style} feels like the right lead because it is ${readiness}, with enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to make the recommendation feel grounded even without a long tasting history.`,
+    body: context === 'tonight'
+      ? `This ${style} feels like the right lead because the weather and overall mood suit its ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture}.`
+      : `This ${style} feels like the right lead because it is ${readiness}, with enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to make the recommendation feel grounded even without a long tasting history.`,
     reasoning,
   };
 }

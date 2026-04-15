@@ -2,7 +2,6 @@ import { LocalWeather } from '../services/localWeatherService';
 import { mapWineToProfile } from '../services/wineAttributeMapper';
 import { getProfileWeatherScore, ProfileTemperatureBand, ProfileWeatherCondition } from '../services/wineProfileSelectors';
 import { Wine } from '../types/wine';
-import { getDrinkabilityInfo } from './drinkWindow';
 
 export type TemperatureBand = ProfileTemperatureBand;
 export type WeatherConditionCategory = ProfileWeatherCondition;
@@ -95,7 +94,6 @@ export function getRecommendationScoreBreakdown(
   wine: Wine,
   weatherContext: WeatherRecommendationContext | null,
 ): RecommendationScoreBreakdown {
-  const drinkInfo = getDrinkabilityInfo(wine);
   const profile = mapWineToProfile(wine);
   const profileWeatherScore = weatherContext
     ? getProfileWeatherScore(profile, weatherContext.temperatureBand, weatherContext.condition)
@@ -107,7 +105,6 @@ export function getRecommendationScoreBreakdown(
     (wine.status === 'consumed' ? -999 : 0);
   const interest = getInterestScore(wine);
   const total =
-    drinkInfo.urgencyScore +
     rating +
     quantity +
     profileWeatherScore.temperatureFit +
@@ -117,7 +114,7 @@ export function getRecommendationScoreBreakdown(
     statusAdjustment;
 
   return {
-    readiness: drinkInfo.urgencyScore,
+    readiness: 0,
     rating,
     quantity,
     temperatureFit: profileWeatherScore.temperatureFit,
@@ -148,17 +145,9 @@ export function getWeatherContextLabel(context: WeatherRecommendationContext | n
 }
 
 export function getWeatherAwareRecommendation(wine: Wine, weatherContext: WeatherRecommendationContext | null) {
-  const status = getDrinkabilityInfo(wine).status;
   const profile = mapWineToProfile(wine);
   const wineLabel = wine.varietal || profile.styleLabel;
-  const baseRecommendation =
-    status === 'Peak window'
-      ? 'It is drinking beautifully now, with enough presence to feel a little special.'
-      : status === 'Nearing end of peak'
-        ? 'It is a thoughtful candidate for dinner tonight before it slips further along.'
-        : status === 'Ready to drink'
-          ? 'It looks ready and would make a lovely bottle to open tonight.'
-          : 'It is not perfectly in its moment, but still worth a look if it feels right tonight.';
+  const baseRecommendation = 'This bottle makes sense because its style and shape suit the mood of the evening.';
 
   if (!weatherContext) return baseRecommendation;
 
