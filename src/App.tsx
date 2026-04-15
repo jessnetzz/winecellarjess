@@ -308,21 +308,19 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
         <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
           <div className="min-w-0">
             <p className="section-kicker">Private cellar</p>
-            <h1 className="mt-2 max-w-full whitespace-normal break-words font-liam font-normal leading-[1.05] text-ink sm:mt-3 sm:max-w-4xl sm:leading-tight">
-              <span className="block text-[2.35rem] lg:hidden">Your wine cellar, beautifully kept.</span>
-              <span className="hidden text-6xl lg:block">
-                Your collection, in one place—drink windows, tasting notes, and cellar value, thoughtfully kept.
-              </span>
+            <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight">
+              <span className="block">Everything you love</span>
+              <span className="block">about your wines.</span>
             </h1>
+            <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-smoke sm:mt-5 sm:text-lg sm:leading-8">
+              All in one place—even the little details you forget.
+            </p>
             <div className="mt-4 grid gap-4 xl:block">
               <CellarStats wines={wines} />
               <div className="xl:hidden">
                 <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
               </div>
             </div>
-            <p className="mt-4 max-w-full whitespace-normal break-words text-sm leading-6 text-smoke sm:mt-5 sm:max-w-3xl sm:text-base sm:leading-7">
-              Track bottles, spot what is at peak, and keep your Supabase-backed collection in sync across your devices.
-            </p>
           </div>
           <div className="hidden xl:block">
             <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
