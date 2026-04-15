@@ -5,7 +5,7 @@ import DrinkStatusBadge from './DrinkStatusBadge';
 import Icon from './Icon';
 import { NaturalLanguageSearchMatch, SortConfig, Wine } from '../types/wine';
 import { formatRating } from '../utils/formatters';
-import { getBestMatchSummary, getSearchMatchChips } from '../utils/searchResultDisplay';
+import { getBestMatchNote, getSearchMatchChips } from '../utils/searchResultDisplay';
 
 interface SearchResultsSectionProps {
   query: string;
@@ -87,6 +87,8 @@ function BestMatchCard({
   onSelectWine: (wine: Wine) => void;
   onDeleteWine: (wine: Wine) => void;
 }) {
+  const sommelierNote = getBestMatchNote(wine, match, query);
+
   return (
     <article className="best-match-card">
       <button
@@ -123,8 +125,9 @@ function BestMatchCard({
           </p>
           <div className="mt-4 max-w-2xl rounded-lg border border-gold/25 bg-porcelain/75 p-4">
             <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Sommelier's note</p>
+            <p className="mt-2 font-serif text-xl font-bold leading-tight text-ink">{sommelierNote.heading}</p>
             <p className="mt-2 text-sm leading-6 text-ink">
-              {getBestMatchSummary(wine, match, query)}
+              {sommelierNote.body}
             </p>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">

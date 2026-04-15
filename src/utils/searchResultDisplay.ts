@@ -12,6 +12,12 @@ type QueryIntent =
   | 'tasting'
   | 'general';
 
+interface PairingPrinciple {
+  label: string;
+  principle: string;
+  expected: string;
+}
+
 function includesAny(source: string, terms: string[]) {
   const normalized = source.toLowerCase();
   return terms.some((term) => normalized.includes(term));
@@ -78,6 +84,52 @@ function getQueryIntent(query = ''): QueryIntent {
   return 'general';
 }
 
+function getPairingPrinciple(query = ''): PairingPrinciple | null {
+  const normalized = query.toLowerCase();
+
+  if (includesAny(normalized, ['goat cheese', 'chèvre', 'chevre'])) {
+    return {
+      label: 'goat cheese',
+      principle: 'Goat cheese usually loves brightness, lift, and a clean finish; acidity keeps the tang lively instead of heavy.',
+      expected: 'Expect a fresh, lightly textured match that cuts through the creaminess without bullying the cheese.',
+    };
+  }
+
+  if (includesAny(normalized, ['salmon', 'fish', 'seafood'])) {
+    return {
+      label: includesAny(normalized, ['salmon']) ? 'salmon' : 'seafood',
+      principle: 'Salmon wants freshness and texture: enough acidity to keep the fish bright, with enough body to meet its richness.',
+      expected: 'Expect a pairing that feels clean, polished, and food-friendly rather than sharp or thin.',
+    };
+  }
+
+  if (includesAny(normalized, ['steak', 'ribeye', 'burger', 'beef'])) {
+    return {
+      label: includesAny(normalized, ['burger']) ? 'burgers' : 'steak',
+      principle: 'Steak generally likes structure: tannin, darker fruit, and enough body to stand up to fat and char.',
+      expected: 'Expect a deeper, more savory glass that can handle the richness instead of disappearing beside it.',
+    };
+  }
+
+  if (includesAny(normalized, ['pasta', 'tomato', 'pizza'])) {
+    return {
+      label: includesAny(normalized, ['pizza']) ? 'pizza' : 'pasta',
+      principle: 'Tomato and pasta tend to reward freshness, moderate body, and fruit that does not fight the sauce.',
+      expected: 'Expect something table-friendly and easy to keep reaching for between bites.',
+    };
+  }
+
+  if (includesAny(normalized, ['cheese'])) {
+    return {
+      label: 'cheese',
+      principle: 'Cheese usually works best when the wine has either cleansing acidity, generous texture, or enough fruit to soften salt and cream.',
+      expected: 'Expect the wine to refresh the palate while keeping the pairing relaxed.',
+    };
+  }
+
+  return null;
+}
+
 function isPrestigeBottle(wine: Wine) {
   return (wine.marketValue ?? 0) >= 150 || (wine.purchasePrice ?? 0) >= 125 || (wine.personalRating ?? 0) >= 96;
 }
@@ -110,6 +162,38 @@ function readinessPhrase(wine: Wine) {
 function stylePhrase(wine: Wine) {
   if (wine.varietal) return wine.varietal;
   return wine.style.replace('-', ' ');
+}
+
+function wineStructurePhrase(wine: Wine) {
+  const source = [wine.varietal, wine.style, wine.tastingNotes, wine.aiAdvice].join(' ').toLowerCase();
+  const descriptors: string[] = [];
+
+  if (includesAny(source, ['sauvignon', 'albariño', 'albarino', 'riesling', 'chenin', 'chablis', 'citrus', 'mineral', 'bright', 'fresh'])) {
+    descriptors.push('brightness');
+  }
+
+  if (includesAny(source, ['chardonnay', 'viognier', 'marsanne', 'roussanne', 'butter', 'cream', 'round', 'texture', 'honey'])) {
+    descriptors.push('texture');
+  }
+
+  if (includesAny(source, ['cabernet', 'syrah', 'shiraz', 'malbec', 'nebbiolo', 'tannin', 'structured', 'bold'])) {
+    descriptors.push('structure');
+  }
+
+  if (includesAny(source, ['pinot', 'grenache', 'gamay', 'rose', 'rosé', 'red fruit', 'cherry', 'silky'])) {
+    descriptors.push('fresh fruit');
+  }
+
+  if (includesAny(source, ['sparkling', 'champagne', 'crémant', 'cremant', 'cava', 'prosecco'])) {
+    descriptors.push('bubbles and lift');
+  }
+
+  if (includesAny(source, ['earth', 'savory', 'leather', 'mushroom', 'herb'])) {
+    descriptors.push('savory depth');
+  }
+
+  const unique = Array.from(new Set(descriptors)).slice(0, 2);
+  return unique.length ? unique.join(' and ') : 'balance';
 }
 
 function tastingPhrase(wine: Wine) {
@@ -164,6 +248,109 @@ function contextualLead(intent: QueryIntent, style: string, query: string) {
   return '';
 }
 
+export function getBestMatchNote(wine: Wine, match?: NaturalLanguageSearchMatch, query = '') {
+  const intent = getQueryIntent(query);
+  const pairingPrinciple = getPairingPrinciple(query);
+  const style = stylePhrase(wine);
+  const readiness = readinessPhrase(wine);
+  const tasting = tastingPhrase(wine);
+  const pairing = pairingPhrase(wine);
+  const region = wine.region || wine.country;
+  const quality = match?.qualityBoost ? 'and the rating signal gives it a little extra pull' : '';
+  const wink = playfulCloser(intent, wine, query);
+  const lead = contextualLead(intent, style, query);
+  const structure = wineStructurePhrase(wine);
+
+  if (pairingPrinciple) {
+    return {
+      heading: `Why it works with ${pairingPrinciple.label}`,
+      body: `${pairingPrinciple.principle} This ${style} brings ${structure} and is ${readiness}${tasting ? `, with notes that suggest ${tasting.toLowerCase()}` : ''}. ${pairingPrinciple.expected}`,
+    };
+  }
+
+  if (intent === 'pairing' && pairing) {
+    return {
+      heading: 'Why it works at the table',
+      body: `Good pairings are about weight and contrast: freshness for lift, texture for harmony, and enough flavor to stay present. This ${style} is ${readiness}, and your pairing notes give it a clear role without making the match feel fussy.`,
+    };
+  }
+
+  if (intent === 'patio') {
+    return {
+      heading: 'Why it works outside',
+      body: `${lead} Patio wines need freshness, ease, and a clean enough finish to stay lively as the glass warms. This ${style} brings ${structure} and is ${readiness}${wink ? ` — ${wink.toLowerCase()}` : '.'}`,
+    };
+  }
+
+  if (intent === 'casual') {
+    return {
+      heading: 'Why it works casually',
+      body: `${lead} A good casual bottle should have enough shape to feel intentional without demanding ceremony. This ${style} brings ${structure} and is ${readiness}${wink ? ` — ${wink.toLowerCase()}` : '.'}`,
+    };
+  }
+
+  if (intent === 'special') {
+    return {
+      heading: 'Why it feels special',
+      body: `Special bottles need presence: structure, detail, and a finish that feels worth slowing down for. This ${style} brings ${region ? `${region} character, ` : ''}${structure}, and it is ${readiness}.`,
+    };
+  }
+
+  if (intent === 'occasion') {
+    return {
+      heading: 'Why it works for company',
+      body: `Dinner-party wines need range: enough flavor to be interesting, enough freshness to stay table-friendly, and enough polish not to hijack the meal. This ${style} is ${readiness}${quality ? `, ${quality}` : ''}.${wink ? ` ${wink}` : ''}`,
+    };
+  }
+
+  if (intent === 'mood') {
+    return {
+      heading: 'Why it fits the mood',
+      body: `Mood matters: cozy searches usually want texture, darker fruit, or a little savory depth, while warmer moods want lift and freshness. This ${style} brings ${region ? `${region} character, ` : ''}${structure}, and it is ${readiness}.${wink ? ` ${wink}` : ''}`,
+    };
+  }
+
+  if (intent === 'drink-now') {
+    return {
+      heading: 'Why it is ready',
+      body: `The strongest signal here is timing. This bottle is ${readiness}, so the fruit, structure, and finish are more likely to feel integrated now rather than awkwardly young or tired.${wink ? ` ${wink}` : ''}`,
+    };
+  }
+
+  if (intent === 'tasting' && tasting) {
+    return {
+      heading: 'Why the flavor profile fits',
+      body: `${sentenceCase(style)} makes sense here because the notes suggest ${tasting.toLowerCase()}. The useful bit is not just flavor matching; it is the way ${structure} can carry those notes while the bottle is ${readiness}.`,
+    };
+  }
+
+  if (pairing) {
+    return {
+      heading: 'Why it works',
+      body: `This ${style} is a strong pick because it is ${readiness} and has enough ${structure} to make sense with food. The pairing notes give it a clear lane at the table without overcomplicating the bottle.`,
+    };
+  }
+
+  if (tasting) {
+    return {
+      heading: 'Why it works',
+      body: `This ${style} feels like the best fit because it is ${readiness}, with notes that suggest ${tasting.toLowerCase()}. Expect ${structure} to be the thread that keeps the wine feeling balanced.`,
+    };
+  }
+
+  if (match?.reason && !match.reason.toLowerCase().includes('matched cellar details')) {
+    return {
+      heading: 'Why it works',
+      body: `${match.reason} The practical reason to consider it is timing: it is ${readiness}, so the bottle has a better chance of feeling complete in the glass.`,
+    };
+  }
+
+  return {
+    heading: 'Why it works',
+    body: `This ${style} feels like the right lead because it is ${readiness}, with enough ${structure} to make the recommendation feel grounded even without a long tasting history.`,
+  };
+}
+
 export function getSearchMatchLabel(match: NaturalLanguageSearchMatch) {
   if (match.keywordScore > 0.08 && match.semanticScore > 0.58) return 'Exact + AI match';
   if (match.keywordScore > 0.08) return 'Exact match';
@@ -195,67 +382,5 @@ export function getSearchMatchChips(match: NaturalLanguageSearchMatch, wine: Win
 }
 
 export function getBestMatchSummary(wine: Wine, match?: NaturalLanguageSearchMatch, query = '') {
-  const intent = getQueryIntent(query);
-  const style = stylePhrase(wine);
-  const readiness = readinessPhrase(wine);
-  const tasting = tastingPhrase(wine);
-  const pairing = pairingPhrase(wine);
-  const region = wine.region || wine.country;
-  const quality = match?.qualityBoost ? 'and the rating signal gives it a little extra pull' : '';
-  const wink = playfulCloser(intent, wine, query);
-  const lead = contextualLead(intent, style, query);
-
-  if (intent === 'pairing' && pairing) {
-    return `This ${style} stands out for "${query}" because its pairing notes already point in that direction. It is ${readiness}, so it feels like an easy bottle to trust at the table.`;
-  }
-
-  if (intent === 'patio') {
-    return `${lead} It is ${readiness}, with enough freshness to feel effortless${wink ? ` — ${wink.toLowerCase()}` : '.'}`;
-  }
-
-  if (intent === 'casual') {
-    return `${lead} It is ${readiness}, with just enough character to make the glass feel considered${wink ? ` — ${wink.toLowerCase()}` : '.'}`;
-  }
-
-  if (intent === 'special') {
-    return `This ${style} feels right for "${query}": ${region ? `${region} detail, ` : ''}${readiness}, and enough presence to make the bottle feel intentional.`;
-  }
-
-  if (intent === 'occasion') {
-    return `This feels like the kind of bottle that works well with company: expressive, table-friendly, and not too fussy. It is ${readiness}${quality ? `, ${quality}` : ''}.${wink ? ` ${wink}` : ''}`;
-  }
-
-  if (intent === 'mood') {
-    return `This ${style} feels right for "${query}": ${region ? `${region} character, ` : ''}${readiness}, and enough personality to suit the moment.${wink ? ` ${wink}` : ''}`;
-  }
-
-  if (intent === 'drink-now') {
-    return `This bottle rises to the top because it is ${readiness}. It has the strongest cellar timing for what you asked, without needing much overthinking.${wink ? ` ${wink}` : ''}`;
-  }
-
-  if (intent === 'tasting' && tasting) {
-    return `${sentenceCase(style)} makes sense here because the notes suggest the kind of profile you are after: ${tasting}. It is ${readiness}, which makes the match feel practical as well as tempting.`;
-  }
-
-  if (pairing) {
-    return `This ${style} is a strong pick because it is ${readiness} and its pairing notes give it a clear place at the table.`;
-  }
-
-  if (tasting) {
-    return `This ${style} feels like the best fit because it is ${readiness}, with tasting notes that give the result a little more texture: ${tasting}`;
-  }
-
-  if (match?.reason && !match.reason.toLowerCase().includes('matched cellar details')) {
-    return `${match.reason} It is ${readiness}, which makes it feel like a thoughtful bottle to consider now.`;
-  }
-
-  const parts = [
-    style,
-    region,
-    wine.foodPairingNotes || wine.tastingNotes,
-  ].filter(Boolean);
-
-  return parts.length
-    ? `This ${style} feels like the right lead because it is ${readiness}, with enough context from your cellar notes to make it worth opening.`
-    : `This bottle feels like the best place to start: ${readiness}, easy to understand, and a calm fit for what you searched.`;
+  return getBestMatchNote(wine, match, query).body;
 }
