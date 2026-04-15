@@ -1,6 +1,17 @@
 import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
 import { getDrinkabilityInfo } from './drinkWindow';
 
+type QueryIntent =
+  | 'casual'
+  | 'drink-now'
+  | 'mood'
+  | 'occasion'
+  | 'pairing'
+  | 'patio'
+  | 'special'
+  | 'tasting'
+  | 'general';
+
 function includesAny(source: string, terms: string[]) {
   const normalized = source.toLowerCase();
   return terms.some((term) => normalized.includes(term));
@@ -16,14 +27,39 @@ function compactText(value = '', maxLength = 120) {
   return `${clean.slice(0, maxLength).replace(/\s+\S*$/, '')}...`;
 }
 
-function getQueryIntent(query = '') {
+function stableIndex(seed: string, length: number) {
+  if (!length) return 0;
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) % 9973;
+  }
+  return hash % length;
+}
+
+function pickPhrase(options: string[], seed: string) {
+  return options[stableIndex(seed, options.length)];
+}
+
+function getQueryIntent(query = ''): QueryIntent {
   const normalized = query.toLowerCase();
 
-  if (includesAny(normalized, ['pair', 'food', 'seafood', 'salmon', 'steak', 'pasta', 'cheese', 'dinner'])) {
+  if (includesAny(normalized, ['anniversary', 'birthday', 'special', 'splurge', 'fancy', 'rare', 'celebrate', 'celebration'])) {
+    return 'special';
+  }
+
+  if (includesAny(normalized, ['patio', 'porch', 'summer', 'pool', 'picnic', 'outside', 'outdoor', 'sunny', 'hot day'])) {
+    return 'patio';
+  }
+
+  if (includesAny(normalized, ['easy', 'casual', 'weeknight', 'low key', 'low-key', 'no fuss', 'simple'])) {
+    return 'casual';
+  }
+
+  if (includesAny(normalized, ['pair', 'food', 'seafood', 'salmon', 'steak', 'pasta', 'cheese'])) {
     return 'pairing';
   }
 
-  if (includesAny(normalized, ['friends', 'party', 'company', 'host', 'group', 'celebrate', 'celebration'])) {
+  if (includesAny(normalized, ['friends', 'party', 'company', 'host', 'group', 'dinner'])) {
     return 'occasion';
   }
 
@@ -40,6 +76,24 @@ function getQueryIntent(query = '') {
   }
 
   return 'general';
+}
+
+function isPrestigeBottle(wine: Wine) {
+  return (wine.marketValue ?? 0) >= 150 || (wine.purchasePrice ?? 0) >= 125 || (wine.personalRating ?? 0) >= 96;
+}
+
+function shouldUsePlayfulTone(intent: QueryIntent, wine: Wine, query: string) {
+  if (isPrestigeBottle(wine) || intent === 'special') return false;
+
+  const playfulIntents: QueryIntent[] = ['casual', 'occasion', 'patio', 'mood', 'drink-now'];
+  if (!playfulIntents.includes(intent)) return false;
+
+  const normalized = query.toLowerCase();
+  if (includesAny(normalized, ['easy', 'patio', 'porch', 'weeknight', 'friends', 'party', 'cozy', 'tonight'])) {
+    return true;
+  }
+
+  return stableIndex(`${wine.id}-${query}-${wine.name}`, 4) === 0;
 }
 
 function readinessPhrase(wine: Wine) {
@@ -66,6 +120,48 @@ function tastingPhrase(wine: Wine) {
 
 function pairingPhrase(wine: Wine) {
   return wine.foodPairingNotes ? compactText(wine.foodPairingNotes, 96) : '';
+}
+
+function playfulCloser(intent: QueryIntent, wine: Wine, query: string) {
+  if (!shouldUsePlayfulTone(intent, wine, query)) return '';
+
+  const seed = `${wine.id}-${query}-${intent}`;
+  const options: Partial<Record<QueryIntent, string[]>> = {
+    casual: [
+      'A no-fuss winner, basically.',
+      'Call it low-stakes luxury.',
+      'A weeknight hero with good manners.',
+    ],
+    'drink-now': [
+      'No need to make this one sit politely in the corner.',
+      'Beautifully timed and ready whenever you are.',
+      'An easy yes from the cellar.',
+    ],
+    mood: [
+      'The kind of bottle that belongs near a blanket.',
+      'Quietly charming, which is exactly the assignment.',
+      'A happy little bottle for the mood.',
+    ],
+    occasion: [
+      'A crowd-pleaser with good manners.',
+      'This bottle knows how to behave at a dinner table.',
+      'A dinner-party ringer without the drama.',
+    ],
+    patio: [
+      'A proper porch pounder, in the tasteful sense.',
+      'Bright, relaxed, and dangerously easy to drink.',
+      'An outdoor-glass easy yes.',
+    ],
+  };
+
+  return pickPhrase(options[intent] ?? [], seed);
+}
+
+function contextualLead(intent: QueryIntent, style: string, query: string) {
+  if (intent === 'patio') return `For "${query}", this ${style} leans bright and relaxed.`;
+  if (intent === 'special') return `For "${query}", this ${style} keeps things polished and quietly memorable.`;
+  if (intent === 'casual') return `For "${query}", this ${style} keeps the mood easy without feeling ordinary.`;
+  return '';
 }
 
 export function getSearchMatchLabel(match: NaturalLanguageSearchMatch) {
@@ -106,21 +202,35 @@ export function getBestMatchSummary(wine: Wine, match?: NaturalLanguageSearchMat
   const pairing = pairingPhrase(wine);
   const region = wine.region || wine.country;
   const quality = match?.qualityBoost ? 'and the rating signal gives it a little extra pull' : '';
+  const wink = playfulCloser(intent, wine, query);
+  const lead = contextualLead(intent, style, query);
 
   if (intent === 'pairing' && pairing) {
     return `This ${style} stands out for "${query}" because its pairing notes already point in that direction. It is ${readiness}, so it feels like an easy bottle to trust at the table.`;
   }
 
+  if (intent === 'patio') {
+    return `${lead} It is ${readiness}, with enough freshness to feel effortless${wink ? ` — ${wink.toLowerCase()}` : '.'}`;
+  }
+
+  if (intent === 'casual') {
+    return `${lead} It is ${readiness}, with just enough character to make the glass feel considered${wink ? ` — ${wink.toLowerCase()}` : '.'}`;
+  }
+
+  if (intent === 'special') {
+    return `This ${style} feels right for "${query}": ${region ? `${region} detail, ` : ''}${readiness}, and enough presence to make the bottle feel intentional.`;
+  }
+
   if (intent === 'occasion') {
-    return `This feels like the kind of bottle that works well with company: expressive, food-friendly, and not too fussy. It is ${readiness}${quality ? `, ${quality}` : ''}.`;
+    return `This feels like the kind of bottle that works well with company: expressive, table-friendly, and not too fussy. It is ${readiness}${quality ? `, ${quality}` : ''}.${wink ? ` ${wink}` : ''}`;
   }
 
   if (intent === 'mood') {
-    return `This ${style} feels right for "${query}": ${region ? `${region} character, ` : ''}${readiness}, and enough personality to suit the moment.`;
+    return `This ${style} feels right for "${query}": ${region ? `${region} character, ` : ''}${readiness}, and enough personality to suit the moment.${wink ? ` ${wink}` : ''}`;
   }
 
   if (intent === 'drink-now') {
-    return `This bottle rises to the top because it is ${readiness}. It has the strongest cellar timing for what you asked, without needing much overthinking.`;
+    return `This bottle rises to the top because it is ${readiness}. It has the strongest cellar timing for what you asked, without needing much overthinking.${wink ? ` ${wink}` : ''}`;
   }
 
   if (intent === 'tasting' && tasting) {
