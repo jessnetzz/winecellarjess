@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import DrinkStatusBadge from './DrinkStatusBadge';
 import { getLocalWeather, LocalWeather } from '../services/localWeatherService';
+import { buildSommelierRecommendation } from '../services/sommelierReasoningEngine';
 import { Wine } from '../types/wine';
 import {
-  getWeatherAwareRecommendation,
   getWeatherContextLabel,
   getWeatherRecommendationContext,
   scoreTonightsBottle,
@@ -32,6 +32,18 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
   );
   const wine = candidates.length ? candidates[offset % candidates.length] : undefined;
   const weatherContextLabel = getWeatherContextLabel(weatherContext);
+  const tonightRecommendation = useMemo(
+    () =>
+      wine
+        ? buildSommelierRecommendation({
+            wine,
+            context: 'tonight',
+            query: '',
+            weatherContext,
+          })
+        : null,
+    [wine, weatherContext],
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -89,7 +101,11 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
         ) : null}
       </div>
 
-      <p className="mt-4 text-sm leading-6 text-ink">{getWeatherAwareRecommendation(wine, weatherContext)}</p>
+      <div className="mt-4 rounded-lg border border-gold/20 bg-porcelain/70 p-4">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Tonight's note</p>
+        <p className="mt-2 font-serif text-xl font-bold leading-tight text-ink">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
+        <p className="mt-2 text-sm leading-6 text-ink">{tonightRecommendation?.body}</p>
+      </div>
       {!weatherContext && !weatherAttempted ? (
         <p className="mt-2 text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>
       ) : null}
