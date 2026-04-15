@@ -113,8 +113,7 @@ export function classifySommelierQuery(query = '', weatherContext?: WeatherRecom
 
   if (!normalized && weatherContext) {
     if (weatherContext.temperatureBand === 'warm' || weatherContext.temperatureBand === 'hot') return 'patio';
-    if (weatherContext.condition === 'rainy' || weatherContext.condition === 'snow') return 'mood';
-    return 'drink-now';
+    return 'mood';
   }
 
   if (includesAny(normalized, ['anniversary', 'birthday', 'special', 'splurge', 'fancy', 'rare', 'celebrate', 'celebration'])) {
@@ -205,14 +204,14 @@ function getFoodPairingPrinciple(foodProfile: FoodProfile, weatherContext?: Weat
     return {
       label: isWarm ? 'the evening' : 'tonight',
       matchType: 'bridge',
-      category: weatherContext.condition === 'rainy' || weatherContext.condition === 'snow' ? 'weather' : 'drink-now',
+      category: 'weather',
       weight: isWarm ? 'light' : 'medium',
       texture: isWarm ? 'fresh and easy' : 'comforting and textured',
       dominantFlavors: [weatherContext.mood],
-      needs: isWarm ? ['freshness', 'lift', 'easy drinkability'] : ['warmth', 'depth', 'readiness'],
+      needs: isWarm ? ['freshness', 'lift', 'easy drinkability'] : ['warmth', 'depth', 'comfort'],
       principle: isWarm
         ? 'Warmer evenings usually want freshness, ease, and enough lift to keep the bottle feeling relaxed.'
-        : 'Evening picks usually work best when they feel ready, comforting, and easy to enjoy without much ceremony.',
+        : 'Cooler evenings usually work best with bottles that feel comforting, textured, and easy to settle into.',
       expected: isWarm
         ? 'Expect something refreshing and sociable rather than weighty.'
         : 'Expect a bottle that feels naturally suited to the moment.',
@@ -373,7 +372,13 @@ function computeConfidence(queryType: SommelierQueryType, wine: Wine, match?: Na
 
 export function buildSommelierReasoning(input: SommelierRecommendationInput): SommelierReasoning {
   const context = input.context ?? 'search';
-  const queryType = classifySommelierQuery(input.query ?? '', input.weatherContext);
+  const classifiedQueryType = classifySommelierQuery(input.query ?? '', input.weatherContext);
+  const queryType =
+    context === 'tonight' && classifiedQueryType === 'drink-now'
+      ? input.weatherContext?.temperatureBand === 'warm' || input.weatherContext?.temperatureBand === 'hot'
+        ? 'patio'
+        : 'mood'
+      : classifiedQueryType;
   const queryLabel = getQueryLabel(input.query, input.weatherContext, context);
   const foodProfile = input.query?.trim() ? mapQueryToFoodProfile(input.query) : null;
   const dishProfile = buildDishProfile(queryType, input.query ?? '', input.weatherContext);
@@ -465,7 +470,7 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
     if (context === 'tonight') {
       return {
         heading: 'Why tonight',
-        body: `Tonight is more about mood than timing. This ${style} brings ${region ? `${region} character, ` : ''}${wineProfile.texture}, ${wineProfile.fruitProfile} fruit, and the kind of ${wineProfile.finish} that suits the evening.${wink ? ` ${wink}` : ''}`,
+        body: `This ${style} brings ${region ? `${region} character, ` : ''}${wineProfile.texture}, ${wineProfile.fruitProfile} fruit, and the kind of ${wineProfile.finish} that suits the evening.${wink ? ` ${wink}` : ''}`,
         reasoning,
       };
     }
@@ -497,7 +502,7 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
     if (context === 'tonight') {
       return {
         heading: 'Why tonight',
-        body: `This ${style} works for tonight because it has enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to feel right with the weather and the general dinner mood. The style has a clear lane at the table without making timing the whole story.`,
+        body: `This ${style} works for tonight because it has enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to feel right with the weather and the general dinner mood. The style has a clear lane at the table without feeling heavy or fussy.`,
         reasoning,
       };
     }
