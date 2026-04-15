@@ -17,6 +17,11 @@ interface TonightsBottleCardProps {
   onSelectWine?: (wine: Wine) => void;
 }
 
+function getBottleMomentLabel(date = new Date()) {
+  const hour = date.getHours();
+  return hour >= 5 && hour < 16 ? 'Today’s Bottle' : 'Tonight’s Bottle';
+}
+
 function buildCardNoteSummary(body?: string) {
   if (!body) return '';
 
@@ -39,6 +44,7 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
   const [offset, setOffset] = useState(0);
   const [weather, setWeather] = useState<LocalWeather | null>(null);
   const [weatherAttempted, setWeatherAttempted] = useState(false);
+  const [bottleMomentLabel, setBottleMomentLabel] = useState(() => getBottleMomentLabel());
   const weatherContext = useMemo(() => getWeatherRecommendationContext(weather), [weather]);
   const candidates = useMemo(
     () =>
@@ -95,10 +101,20 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
     };
   }, []);
 
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setBottleMomentLabel(getBottleMomentLabel());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, []);
+
   if (!wine) {
     return (
       <section className="tonights-bottle-card" aria-labelledby="tonights-bottle-heading">
-        <p id="tonights-bottle-heading" className="section-kicker">Tonight’s Bottle</p>
+        <p id="tonights-bottle-heading" className="section-kicker">{bottleMomentLabel}</p>
         <p className="mt-3 font-serif text-2xl font-bold text-ink">Nothing is calling perfectly tonight.</p>
         <p className="mt-3 text-sm leading-6 text-smoke">
           Maybe browse your cellar and choose something special.
@@ -112,7 +128,7 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
         <div className="min-w-0 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-plum/18 bg-white/78 px-3 py-1.5 shadow-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
-            <p id="tonights-bottle-heading" className="text-[12px] font-bold uppercase tracking-[0.16em] text-plum">Tonight’s Bottle</p>
+            <p id="tonights-bottle-heading" className="text-[12px] font-bold uppercase tracking-[0.16em] text-plum">{bottleMomentLabel}</p>
           </div>
           {weatherContextLabel ? (
             <p className="mx-auto mt-3 inline-flex max-w-fit items-center justify-center rounded-full border border-lavender/18 bg-lavender/18 px-3 py-1.5 text-xs font-semibold leading-5 text-plum shadow-sm">
