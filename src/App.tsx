@@ -25,6 +25,7 @@ import { searchWinesNaturally } from './services/naturalLanguageSearchService';
 import { NaturalLanguageSearchMatch, SortConfig, TastingLogEntry, Wine, WineFilters } from './types/wine';
 import { getDrinkabilityInfo } from './utils/drinkWindow';
 import { getDailyWineFact } from './utils/dailyWineFact';
+import { getUserCellarLabel } from './utils/userDisplayName';
 
 type ViewMode = 'cards' | 'table';
 
@@ -203,6 +204,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
     return activeNaturalSearch ? applySemanticOrder(filtered, naturalSearch.matches) : applySort(filtered, sort);
   }, [activeNaturalSearch, naturalSearch.matches, naturalSearchIds, wines, filters, sort]);
   const dailyWineFact = useMemo(() => getDailyWineFact(new Date(), wines), [wines]);
+  const cellarLabel = useMemo(() => getUserCellarLabel(user), [user]);
   const isSearchingByText = searchQuery.length > 0;
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
 
@@ -287,7 +289,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
         <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 xl:min-h-[430px] xl:grid-cols-[minmax(0,1fr)_336px] xl:items-center xl:gap-10">
           <div className="min-w-0 xl:flex xl:min-h-[360px] xl:max-w-[860px] xl:flex-col xl:justify-center">
             <div className="xl:max-w-[700px]">
-              <p className="section-kicker">Private cellar</p>
+              <p className="section-kicker">{cellarLabel}</p>
               <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight">
                 <span className="block">Everything you love</span>
                 <span className="block">about your wines.</span>
