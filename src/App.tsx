@@ -4,6 +4,7 @@ import AppShell from './components/AppShell';
 import AuthScreen, { AuthMode } from './components/AuthScreen';
 import CellarPriorities from './components/CellarPriorities';
 import CellarStats from './components/CellarStats';
+import CellarToolbar from './components/CellarToolbar';
 import CollectionCards from './components/CollectionCards';
 import CollectionTable from './components/CollectionTable';
 import Dashboard from './components/Dashboard';
@@ -277,32 +278,8 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
   return (
     <AppShell
       user={user}
-      query={filters.query}
-      searchStatus={
-        naturalSearch.isLoading
-          ? 'searching'
-          : activeNaturalSearch
-            ? 'smart'
-            : naturalSearch.error && filters.query.trim().length >= 3
-              ? 'fallback'
-              : 'idle'
-      }
-      searchMessage={
-        naturalSearch.isLoading
-          ? 'Reading your cellar by mood, pairing, occasion, and notes...'
-          : activeNaturalSearch
-            ? `Showing AI-ranked bottles for "${searchQuery}".`
-            : naturalSearch.error && filters.query.trim().length >= 3
-              ? 'AI search is unavailable, so keyword search is still working.'
-              : undefined
-      }
-      viewMode={viewMode}
-      isBusy={isLoading || isMutating}
-      onQueryChange={(query) => setFilters((current) => ({ ...current, query }))}
       onCreateWine={openCreate}
-      onRefresh={() => void reload()}
       onSignOut={() => void authService.signOut()}
-      onToggleView={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
     >
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
         <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
@@ -326,6 +303,34 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
             <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
           </div>
         </section>
+
+        <CellarToolbar
+          query={filters.query}
+          searchStatus={
+            naturalSearch.isLoading
+              ? 'searching'
+              : activeNaturalSearch
+                ? 'smart'
+                : naturalSearch.error && filters.query.trim().length >= 3
+                  ? 'fallback'
+                  : 'idle'
+          }
+          searchMessage={
+            naturalSearch.isLoading
+              ? 'Reading your cellar by mood, pairing, occasion, and notes...'
+              : activeNaturalSearch
+                ? `Showing AI-ranked bottles for "${searchQuery}".`
+                : naturalSearch.error && filters.query.trim().length >= 3
+                  ? 'AI search is unavailable, so keyword search is still working.'
+                  : undefined
+          }
+          viewMode={viewMode}
+          isBusy={isLoading || isMutating}
+          onQueryChange={(query) => setFilters((current) => ({ ...current, query }))}
+          onCreateWine={openCreate}
+          onRefresh={() => void reload()}
+          onToggleView={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
+        />
 
         {hasLocalImport ? (
           <LocalImportBanner onImport={() => void importLocalWines()} onDismiss={dismissLocalImport} isBusy={isMutating} />

@@ -5,16 +5,8 @@ import Icon, { IconName } from './Icon';
 interface AppShellProps {
   children: ReactNode;
   user: User;
-  query: string;
-  searchStatus?: 'idle' | 'searching' | 'smart' | 'fallback';
-  searchMessage?: string;
-  viewMode: 'cards' | 'table';
-  isBusy: boolean;
-  onQueryChange: (query: string) => void;
   onCreateWine: () => void;
-  onRefresh: () => void;
   onSignOut: () => void;
-  onToggleView: () => void;
 }
 
 const navItems: Array<{ label: string; href: string; icon: IconName }> = [
@@ -71,59 +63,17 @@ function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
 
 function TopNav({
   user,
-  query,
-  searchStatus = 'idle',
-  searchMessage,
-  viewMode,
-  isBusy,
-  onQueryChange,
-  onCreateWine,
-  onRefresh,
   onSignOut,
-  onToggleView,
 }: Omit<AppShellProps, 'children'>) {
   return (
     <header className="sticky top-0 z-30 border-b border-[#E7DCCB] bg-paper/95 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <div className="lg:hidden">
             <p className="section-kicker">Private cellar</p>
             <h1 className="mt-1 font-serif text-3xl font-bold leading-tight text-ink">Wine Cellar</h1>
           </div>
 
-          <label className="relative max-w-2xl flex-1">
-            <span className="sr-only">Search cellar</span>
-            <Icon name="search" className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-smoke" />
-            <input
-              className="field h-12 bg-white/95 pl-11 text-base sm:h-11 sm:text-sm"
-              type="search"
-              placeholder="Try “something cozy for a rainy night”..."
-              value={query}
-              onChange={(event) => onQueryChange(event.target.value)}
-            />
-            {searchStatus !== 'idle' || searchMessage ? (
-              <span className={`mt-2 block text-xs font-semibold ${
-                searchStatus === 'fallback' ? 'text-clay' : searchStatus === 'searching' ? 'text-smoke' : 'text-plum'
-              }`}>
-                {searchMessage ?? (searchStatus === 'searching' ? 'Reading your cellar by mood, pairing, and notes...' : 'AI-ranked cellar results')}
-              </span>
-            ) : null}
-          </label>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button className="secondary-button hidden sm:inline-flex" type="button" onClick={onToggleView}>
-              {viewMode === 'cards' ? 'Table view' : 'Gallery view'}
-            </button>
-            <button className="secondary-button hidden sm:inline-flex" type="button" onClick={onRefresh} disabled={isBusy}>
-              Refresh
-            </button>
-            <button className="premium-button hidden sm:inline-flex" type="button" onClick={onCreateWine} disabled={isBusy}>
-              <Icon name="plus" className="h-4 w-4" />
-              Add wine
-            </button>
-            <button className="secondary-button sm:hidden" type="button" onClick={onRefresh} disabled={isBusy}>
-              Refresh
-            </button>
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
             <div className="interactive-surface hidden items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm hover:border-lavender/35 hover:bg-white hover:shadow-subtle sm:flex">
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-lavender/20 text-plum">
                 <Icon name="user" className="h-4 w-4" />
@@ -134,7 +84,6 @@ function TopNav({
               Sign out
             </button>
           </div>
-        </div>
       </div>
     </header>
   );
