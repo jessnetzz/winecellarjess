@@ -2,6 +2,7 @@ import {
   buildSearchDocument,
   cosineSimilarity,
   getKeywordScore,
+  getProfileBoost,
   getQualityBoost,
   getReadinessBoost,
   reasonForMatch,
@@ -151,8 +152,9 @@ export default async function handler(request: any, response: any) {
         const semanticScore = cosineSimilarity(queryEmbedding, embeddings[index + 1]);
         const keywordScore = getKeywordScore(input.query, wine, document);
         const readinessBoost = getReadinessBoost(input.query, wine);
+        const profileBoost = getProfileBoost(input.query, wine);
         const qualityBoost = getQualityBoost(wine);
-        const score = semanticScore + keywordScore + readinessBoost + qualityBoost;
+        const score = semanticScore + keywordScore + readinessBoost + profileBoost.score + qualityBoost;
 
         return {
           id: wine.id,
@@ -160,8 +162,10 @@ export default async function handler(request: any, response: any) {
           semanticScore: Number(semanticScore.toFixed(6)),
           keywordScore: Number(keywordScore.toFixed(6)),
           readinessBoost: Number(readinessBoost.toFixed(6)),
+          profileBoost: Number(profileBoost.score.toFixed(6)),
           qualityBoost: Number(qualityBoost.toFixed(6)),
           reason: reasonForMatch(input.query, wine, document),
+          profileReasons: profileBoost.reasons,
         };
       })
       .sort((a, b) => b.score - a.score)

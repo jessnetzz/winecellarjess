@@ -1,3 +1,7 @@
+import { getProfileSearchBoost, getWineProfileTags } from '../src/services/wineProfileSelectors';
+import { mapWineToProfile } from '../src/services/wineAttributeMapper';
+import type { Wine, WineStyle, WineStatus } from '../src/types/wine';
+
 export interface SearchWineRequest {
   query: string;
   limit: number;
@@ -9,8 +13,10 @@ export interface SearchWineMatch {
   semanticScore: number;
   keywordScore: number;
   readinessBoost: number;
+  profileBoost: number;
   qualityBoost: number;
   reason: string;
+  profileReasons: string[];
 }
 
 interface TastingEntryRow {
@@ -53,11 +59,6 @@ export interface SearchWineRow {
   tasting_entries?: TastingEntryRow[] | null;
 }
 
-const cozyTerms = ['cozy', 'rainy', 'cold', 'winter', 'fireplace', 'comforting', 'warming'];
-const boldTerms = ['bold', 'rich', 'steak', 'full', 'structured', 'cabernet', 'syrah', 'malbec', 'bordeaux'];
-const freshTerms = ['seafood', 'fish', 'crisp', 'fresh', 'white', 'oyster', 'salmon', 'shrimp'];
-const specialTerms = ['special', 'friends', 'dinner', 'celebration', 'date', 'occasion'];
-
 function cleanText(value: unknown, maxLength = 240) {
   if (typeof value !== 'string') return '';
   return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
@@ -72,6 +73,73 @@ function tokenize(value: string) {
     .replace(/[^a-z0-9\s]/g, ' ')
     .split(/\s+/)
     .filter((token) => token.length > 2);
+}
+
+function toWineStyle(value?: string | null): WineStyle {
+  if (value === 'red' || value === 'white' || value === 'rose' || value === 'sparkling' || value === 'dessert' || value === 'fortified' || value === 'orange') {
+    return value;
+  }
+  return 'red';
+}
+
+function toWineStatus(value?: string | null): WineStatus {
+  if (value === 'opened' || value === 'consumed') return value;
+  return 'unopened';
+}
+
+export function searchWineRowToWine(row: SearchWineRow): Wine {
+  return {
+    id: row.id,
+    name: row.wine_name,
+    producer: row.producer ?? '',
+    vintage: row.vintage_year ?? new Date().getFullYear(),
+    appellation: row.appellation ?? '',
+    region: row.region ?? '',
+    country: row.country ?? '',
+    varietal: row.varietal ?? '',
+    style: toWineStyle(row.style_category),
+    bottleSize: '750ml',
+    quantity: row.quantity ?? 1,
+    purchaseDate: '',
+    purchasePrice: 0,
+    marketValue: 0,
+    alcoholPercent: undefined,
+    drinkWindowStart: row.drink_window_start_year ?? new Date().getFullYear(),
+    drinkWindowEnd: row.drink_window_end_year ?? new Date().getFullYear(),
+    bestDrinkBy: row.best_drink_by_year ?? new Date().getFullYear(),
+    storageLocation: {
+      id: row.storage_locations?.label ?? undefined,
+      rack: row.storage_locations?.rack ?? undefined,
+      shelf: row.storage_locations?.shelf ?? undefined,
+      bin: row.storage_locations?.bin ?? undefined,
+      box: row.storage_locations?.box ?? undefined,
+      fridge: row.storage_locations?.fridge ?? undefined,
+      notes: row.storage_locations?.notes ?? undefined,
+      displayName: row.storage_locations?.label ?? 'Cellar',
+    },
+    acquisitionSource: '',
+    status: toWineStatus(row.status),
+    tastingNotes: row.tasting_notes ?? '',
+    personalRating: row.personal_rating ?? undefined,
+    foodPairingNotes: row.food_pairing_notes ?? '',
+    aiAdvice: row.ai_advice ?? '',
+    imageUrl: undefined,
+    tastingLog: (row.tasting_entries ?? []).map((entry, index) => ({
+      id: `${row.id}-entry-${index}`,
+      tastingDate: entry.tasted_at ?? '',
+      notes: entry.notes ?? '',
+      rating: entry.rating ?? undefined,
+      decanted: false,
+      pairings: entry.pairing ?? undefined,
+      occasion: entry.occasion ?? undefined,
+    })),
+    createdAt: row.updated_at ?? '',
+    updatedAt: row.updated_at ?? '',
+  };
+}
+
+export function getSearchWineProfile(wine: SearchWineRow) {
+  return mapWineToProfile(searchWineRowToWine(wine));
 }
 
 export function validateSearchWineRequest(body: unknown): { input?: SearchWineRequest; error?: string } {
@@ -106,28 +174,8 @@ function getDrinkWindowText(wine: SearchWineRow, currentYear = new Date().getFul
   return 'too young hold for later';
 }
 
-function getMoodText(wine: SearchWineRow) {
-  const style = wine.style_category ?? '';
-  const varietal = normalize(wine.varietal ?? '');
-  const text = normalize(`${wine.wine_name} ${wine.producer} ${wine.varietal ?? ''} ${wine.tasting_notes ?? ''} ${wine.food_pairing_notes ?? ''}`);
-  const moods: string[] = [];
-
-  if (style === 'red' || cozyTerms.some((term) => text.includes(term))) moods.push('cozy dinner red evening warming savory');
-  if (boldTerms.some((term) => text.includes(term))) moods.push('rich bold structured steak grilled meat special');
-  if (style === 'white' || style === 'rose' || style === 'sparkling' || freshTerms.some((term) => text.includes(term))) {
-    moods.push('fresh bright seafood crisp patio lighter dinner');
-  }
-  if (specialTerms.some((term) => text.includes(term)) || (wine.personal_rating ?? 0) >= 94 || (wine.quantity ?? 0) <= 1) {
-    moods.push('special bottle dinner with friends memorable occasion');
-  }
-  if (varietal.includes('chardonnay')) moods.push('chardonnay buttery creamy seafood roast chicken fuller white');
-  if (varietal.includes('pinot')) moods.push('pinot noir silky earthy rainy night salmon mushrooms');
-  if (varietal.includes('cabernet') || varietal.includes('syrah') || varietal.includes('malbec')) moods.push('bold red steak rich winter cellar');
-
-  return moods.join('. ');
-}
-
 export function buildSearchDocument(wine: SearchWineRow) {
+  const profile = getSearchWineProfile(wine);
   const tastingEntries = (wine.tasting_entries ?? [])
     .map((entry) =>
       [
@@ -156,6 +204,8 @@ export function buildSearchDocument(wine: SearchWineRow) {
   return [
     `${wine.vintage_year} ${wine.producer} ${wine.wine_name}`,
     `Style: ${wine.style_category ?? 'unknown'} wine. Varietal: ${wine.varietal ?? 'unknown'}.`,
+    `Profile: ${profile.profileSummary}.`,
+    `Profile tags: ${getWineProfileTags(profile).join(', ')}.`,
     `Origin: ${[wine.appellation, wine.region, wine.country].map((value) => cleanText(value)).filter(Boolean).join(', ')}.`,
     `Drink status: ${getDrinkWindowText(wine)}. Window ${wine.drink_window_start_year ?? ''}-${wine.drink_window_end_year ?? ''}, best by ${wine.best_drink_by_year ?? ''}.`,
     wine.personal_rating ? `Personal rating ${wine.personal_rating}.` : '',
@@ -163,7 +213,6 @@ export function buildSearchDocument(wine: SearchWineRow) {
     `Food pairings: ${cleanText(wine.food_pairing_notes, 900)}.`,
     `AI cellar advice: ${cleanText(wine.ai_advice, 900)}.`,
     `Storage: ${location}.`,
-    getMoodText(wine),
     tastingEntries ? `Tasting journal: ${tastingEntries}` : '',
   ]
     .filter(Boolean)
@@ -203,11 +252,16 @@ export function getReadinessBoost(query: string, wine: SearchWineRow) {
   const asksReady = ['ready', 'drink now', 'tonight', 'open', 'peak', 'dinner'].some((term) => text.includes(term));
   if (!asksReady) return 0;
 
-  const readiness = getDrinkWindowText(wine);
-  if (readiness.includes('ready to drink') || readiness.includes('peak')) return 0.08;
-  if (readiness.includes('drink soon')) return 0.06;
-  if (readiness.includes('too young')) return -0.06;
+  const profile = getSearchWineProfile(wine);
+  if (profile.readinessTag === 'peak_window') return 0.08;
+  if (profile.readinessTag === 'ready_now' || profile.readinessTag === 'nearing_end') return 0.06;
+  if (profile.readinessTag === 'too_young') return -0.06;
   return 0;
+}
+
+export function getProfileBoost(query: string, wine: SearchWineRow) {
+  const profile = getSearchWineProfile(wine);
+  return getProfileSearchBoost(query, profile);
 }
 
 export function getQualityBoost(wine: SearchWineRow) {
@@ -220,15 +274,17 @@ export function getQualityBoost(wine: SearchWineRow) {
 }
 
 export function reasonForMatch(query: string, wine: SearchWineRow, document: string) {
+  const profile = getSearchWineProfile(wine);
+  const profileBoost = getProfileSearchBoost(query, profile);
   const queryText = normalize(query);
   const docText = normalize(document);
   if (queryText.includes('seafood') && docText.includes('seafood')) return 'Matched seafood pairing notes.';
   if (queryText.includes('steak') && docText.includes('steak')) return 'Matched bold dinner pairing notes.';
-  if ((queryText.includes('ready') || queryText.includes('tonight')) && getDrinkWindowText(wine).includes('ready')) {
+  if ((queryText.includes('ready') || queryText.includes('tonight')) && (profile.readinessTag === 'ready_now' || profile.readinessTag === 'peak_window')) {
     return 'Matched readiness and drink-window timing.';
   }
   if (queryText.includes('butter') && docText.includes('butter')) return 'Matched buttery tasting language.';
+  if (profileBoost.reasons.length) return `Matched ${profileBoost.reasons[0].toLowerCase()}.`;
   if (queryText.includes('cozy') || queryText.includes('rainy')) return 'Matched mood, style, and cellar notes.';
   return 'Matched cellar details, notes, and pairing context.';
 }
-

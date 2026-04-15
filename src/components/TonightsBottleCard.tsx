@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import DrinkStatusBadge from './DrinkStatusBadge';
 import { getLocalWeather, LocalWeather } from '../services/localWeatherService';
+import { mapWineToProfile } from '../services/wineAttributeMapper';
+import { getProfileSupportChips } from '../services/wineProfileSelectors';
 import { buildSommelierRecommendation } from '../services/sommelierReasoningEngine';
 import { Wine } from '../types/wine';
 import {
+  getRecommendationScoreBreakdown,
   getWeatherContextLabel,
   getWeatherRecommendationContext,
   scoreTonightsBottle,
@@ -32,6 +35,11 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
   );
   const wine = candidates.length ? candidates[offset % candidates.length] : undefined;
   const weatherContextLabel = getWeatherContextLabel(weatherContext);
+  const profile = wine ? mapWineToProfile(wine) : null;
+  const scoreBreakdown = wine ? getRecommendationScoreBreakdown(wine, weatherContext) : null;
+  const tonightChips = Array.from(
+    new Set([...(profile ? getProfileSupportChips(profile, 2) : []), ...((scoreBreakdown?.profileReasons ?? []).slice(0, 2))]),
+  );
   const tonightRecommendation = useMemo(
     () =>
       wine
@@ -105,6 +113,13 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
         <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Tonight's note</p>
         <p className="mt-2 font-serif text-xl font-bold leading-tight text-ink">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
         <p className="mt-2 text-sm leading-6 text-ink">{tonightRecommendation?.body}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {tonightChips.map((chip) => (
+            <span key={chip} className="rounded-md bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-smoke shadow-sm">
+              {chip}
+            </span>
+          ))}
+        </div>
       </div>
       {!weatherContext && !weatherAttempted ? (
         <p className="mt-2 text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>

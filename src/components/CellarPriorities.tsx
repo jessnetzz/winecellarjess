@@ -1,4 +1,6 @@
 import DrinkStatusBadge from './DrinkStatusBadge';
+import { mapWineToProfile } from '../services/wineAttributeMapper';
+import { getProfileContextSummary, getProfileSupportChips } from '../services/wineProfileSelectors';
 import { Wine } from '../types/wine';
 import { getDrinkabilityInfo } from '../utils/drinkWindow';
 import { formatCurrency } from '../utils/formatters';
@@ -9,6 +11,19 @@ interface CellarPrioritiesProps {
 }
 
 function PriorityWine({ wine, onSelectWine }: { wine: Wine; onSelectWine: (wine: Wine) => void }) {
+  const profile = mapWineToProfile(wine);
+  const drinkStatus = getDrinkabilityInfo(wine).status;
+  const summaryContext =
+    drinkStatus === 'Peak window'
+      ? 'peak'
+      : drinkStatus === 'Ready to drink'
+        ? 'ready_now'
+        : drinkStatus === 'Nearing end of peak'
+          ? 'drink_soon'
+          : drinkStatus === 'Past peak'
+            ? 'past_peak'
+            : 'general';
+
   return (
     <button
       className="interactive-surface w-full rounded-lg border border-ink/10 bg-white p-4 text-left shadow-sm hover:-translate-y-0.5 hover:border-vine/30 hover:bg-porcelain/80 hover:shadow-lift"
@@ -25,6 +40,16 @@ function PriorityWine({ wine, onSelectWine }: { wine: Wine; onSelectWine: (wine:
         <DrinkStatusBadge wine={wine} compact />
       </div>
       <DrinkStatusBadge wine={wine} showTimeline />
+      <p className="mt-3 text-sm leading-6 text-smoke">
+        {getProfileContextSummary(profile, summaryContext)}
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {getProfileSupportChips(profile).map((chip) => (
+          <span key={chip} className="rounded-md bg-paper px-2.5 py-1 text-[11px] font-semibold text-smoke shadow-sm">
+            {chip}
+          </span>
+        ))}
+      </div>
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold uppercase tracking-wide text-smoke">
         <span>{wine.quantity} bottle{wine.quantity === 1 ? '' : 's'}</span>
         <span>Best by {wine.bestDrinkBy}</span>

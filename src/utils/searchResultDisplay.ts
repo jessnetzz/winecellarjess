@@ -1,9 +1,12 @@
 import { buildSommelierRecommendation } from '../services/sommelierReasoningEngine';
+import { mapWineToProfile } from '../services/wineAttributeMapper';
+import { getProfileContextSummary, getProfileSupportChips } from '../services/wineProfileSelectors';
 import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
 
 export function getSearchMatchLabel(match: NaturalLanguageSearchMatch) {
   if (match.keywordScore > 0.08 && match.semanticScore > 0.58) return 'Exact + AI match';
   if (match.keywordScore > 0.08) return 'Exact match';
+  if (match.profileBoost > 0.05) return 'Profile match';
   if (match.readinessBoost > 0) return 'Drink-window match';
   return 'AI meaning match';
 }
@@ -15,9 +18,12 @@ export function getSearchMatchChips(match: NaturalLanguageSearchMatch, wine: Win
     query,
     context: 'search',
   });
+  const profile = mapWineToProfile(wine);
 
   const chips = [
     ...recommendation.reasoning.supportChips,
+    ...getProfileSupportChips(profile, 2),
+    ...(match.profileReasons ?? []),
     match.keywordScore > 0.08 ? 'Exact cellar text' : '',
     match.semanticScore > 0.58 ? 'AI suggestion' : '',
   ].filter(Boolean);
@@ -36,4 +42,8 @@ export function getBestMatchNote(wine: Wine, match?: NaturalLanguageSearchMatch,
 
 export function getBestMatchSummary(wine: Wine, match?: NaturalLanguageSearchMatch, query = '') {
   return getBestMatchNote(wine, match, query).body;
+}
+
+export function getProfileSearchSummary(wine: Wine) {
+  return getProfileContextSummary(mapWineToProfile(wine), 'search');
 }

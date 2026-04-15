@@ -156,8 +156,10 @@ export interface NaturalLanguageSearchMatch {
   semanticScore: number;
   keywordScore: number;
   readinessBoost: number;
+  profileBoost: number;
   qualityBoost: number;
   reason: string;
+  profileReasons: string[];
 }
 
 export interface NaturalLanguageSearchResult {

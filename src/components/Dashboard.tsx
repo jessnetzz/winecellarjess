@@ -1,5 +1,7 @@
 import DrinkStatusBadge from './DrinkStatusBadge';
 import Icon, { IconName } from './Icon';
+import { mapWineToProfile } from '../services/wineAttributeMapper';
+import { getProfileContextSummary, getProfileSupportChips } from '../services/wineProfileSelectors';
 import { Wine } from '../types/wine';
 import { formatCurrency, formatRating } from '../utils/formatters';
 import { getDrinkabilityInfo, isDrinkableNow, isInNextTwoYears } from '../utils/drinkWindow';
@@ -92,20 +94,37 @@ function PriorityStrip({ title, wines, onSelectWine }: { title: string; wines: W
       </div>
       <div className="mt-4 space-y-2">
         {wines.length ? (
-          wines.slice(0, 4).map((wine) => (
-            <button
-              key={wine.id}
-              className="interactive-surface group flex w-full items-center justify-between gap-3 rounded-md border border-transparent px-3 py-2 text-left hover:-translate-y-px hover:border-plum/20 hover:bg-paper hover:shadow-sm"
-              type="button"
-              onClick={() => onSelectWine?.(wine)}
-            >
-              <span className="min-w-0">
-                <span className="block truncate font-semibold text-ink group-hover:text-plum">{wine.vintage} {wine.name}</span>
-                <span className="block truncate text-sm text-smoke">{wine.producer} · {wine.region}</span>
-              </span>
-              <DrinkStatusBadge wine={wine} compact />
-            </button>
-          ))
+          wines.slice(0, 4).map((wine) => {
+            const profile = mapWineToProfile(wine);
+            const summaryContext = title === 'At peak' ? 'peak' : title === 'High priority' ? 'drink_soon' : 'ready_now';
+
+            return (
+              <button
+                key={wine.id}
+                className="interactive-surface group w-full rounded-md border border-transparent px-3 py-3 text-left hover:-translate-y-px hover:border-plum/20 hover:bg-paper hover:shadow-sm"
+                type="button"
+                onClick={() => onSelectWine?.(wine)}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="min-w-0">
+                    <span className="block truncate font-semibold text-ink group-hover:text-plum">{wine.vintage} {wine.name}</span>
+                    <span className="block truncate text-sm text-smoke">{wine.producer} · {wine.region}</span>
+                  </span>
+                  <DrinkStatusBadge wine={wine} compact />
+                </div>
+                <p className="mt-2 text-xs leading-5 text-smoke">
+                  {getProfileContextSummary(profile, summaryContext)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {getProfileSupportChips(profile, 2).map((chip) => (
+                    <span key={chip} className="rounded-md bg-white/70 px-2 py-1 text-[11px] font-semibold text-smoke">
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </button>
+            );
+          })
         ) : (
           <p className="rounded-md border border-dashed border-ink/15 p-3 text-sm leading-6 text-smoke">
             Nothing urgent here right now.
