@@ -17,6 +17,24 @@ interface TonightsBottleCardProps {
   onSelectWine?: (wine: Wine) => void;
 }
 
+function buildCardNoteSummary(body?: string) {
+  if (!body) return '';
+
+  const normalized = body.replace(/\s+/g, ' ').trim();
+  const sentences = normalized.match(/[^.!?]+[.!?]+/g)?.map((sentence) => sentence.trim()) ?? [normalized];
+  const firstSentence = sentences[0] ?? normalized;
+
+  if (firstSentence.length >= 110 || sentences.length === 1) {
+    return firstSentence;
+  }
+
+  const secondSentence = sentences[1];
+  if (!secondSentence) return firstSentence;
+
+  const combined = `${firstSentence} ${secondSentence}`;
+  return combined.length <= 190 ? combined : firstSentence;
+}
+
 export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBottleCardProps) {
   const [offset, setOffset] = useState(0);
   const [weather, setWeather] = useState<LocalWeather | null>(null);
@@ -52,6 +70,11 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
         : null,
     [wine, weatherContext],
   );
+  const cardNoteSummary = useMemo(
+    () => buildCardNoteSummary(tonightRecommendation?.body),
+    [tonightRecommendation?.body],
+  );
+  const hasFullNote = Boolean(tonightRecommendation?.body && cardNoteSummary && tonightRecommendation.body.trim() !== cardNoteSummary.trim());
 
   useEffect(() => {
     let isMounted = true;
@@ -118,9 +141,18 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
       <div className="border-t border-gold/15 pt-4">
         <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Tonight's note</p>
         <p className="mt-2 font-serif text-[1.5rem] font-bold leading-[1.1] text-ink">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
-        <p className="mt-2 line-clamp-4 text-sm leading-6 text-ink/90">
-          {tonightRecommendation?.body}
+        <p className="mt-2 text-sm leading-6 text-ink/90">
+          {cardNoteSummary || tonightRecommendation?.body}
         </p>
+        {hasFullNote && onSelectWine ? (
+          <button
+            className="ghost-button mt-2 px-0 py-0 text-xs font-bold uppercase tracking-wide text-plum"
+            type="button"
+            onClick={() => onSelectWine(wine)}
+          >
+            Read full note
+          </button>
+        ) : null}
         {tonightChips.length ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {tonightChips.map((chip) => (
