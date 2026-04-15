@@ -202,7 +202,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
     const filtered = applyFilters(wines, filters, naturalSearchIds);
     return activeNaturalSearch ? applySemanticOrder(filtered, naturalSearch.matches) : applySort(filtered, sort);
   }, [activeNaturalSearch, naturalSearch.matches, naturalSearchIds, wines, filters, sort]);
-  const dailyWineFact = useMemo(() => getDailyWineFact(), []);
+  const dailyWineFact = useMemo(() => getDailyWineFact(new Date(), wines), [wines]);
   const isSearchingByText = searchQuery.length > 0;
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
 

@@ -1,3 +1,5 @@
+import { Wine } from '../types/wine';
+
 export type DailyWineFactTone = 'gold' | 'lavender' | 'sage' | 'rose';
 export type DailyWineFactCategory =
   | 'grape'
@@ -21,6 +23,9 @@ export interface DailyWineFact {
   body: string;
 }
 
+type TimeOfDay = 'morning' | 'afternoon' | 'evening';
+type Season = 'winter' | 'spring' | 'summer' | 'autumn';
+
 const DAILY_WINE_FACT_CATEGORY_ORDER: DailyWineFactCategory[] = [
   'structure',
   'grape',
@@ -32,6 +37,19 @@ const DAILY_WINE_FACT_CATEGORY_ORDER: DailyWineFactCategory[] = [
   'aging',
   'cellar',
 ];
+
+const SEASONAL_CATEGORY_WEIGHTS: Record<Season, Partial<Record<DailyWineFactCategory, number>>> = {
+  winter: { pairing: 2.2, cellar: 2, aging: 1.8, structure: 1.6, service: 1.2 },
+  spring: { grape: 1.5, region: 1.5, service: 1.2, sparkling: 1.1, pairing: 0.8 },
+  summer: { service: 2.2, sparkling: 2, pairing: 1.4, grape: 1, region: 0.9 },
+  autumn: { aging: 2, pairing: 1.8, structure: 1.6, winemaking: 1.2, cellar: 1 },
+};
+
+const TIME_OF_DAY_WEIGHTS: Record<TimeOfDay, Partial<Record<DailyWineFactCategory, number>>> = {
+  morning: { grape: 1.5, region: 1.3, structure: 1.1 },
+  afternoon: { service: 1.5, winemaking: 1.2, sparkling: 0.8 },
+  evening: { pairing: 1.8, cellar: 1.5, aging: 1.3, service: 0.9 },
+};
 
 export const DAILY_WINE_FACTS: DailyWineFact[] = [
   {
@@ -256,9 +274,82 @@ function getLocalDateKey(date = new Date()) {
   return date.getFullYear() * 372 + (date.getMonth() + 1) * 31 + date.getDate();
 }
 
-export function getDailyWineFact(date = new Date()): DailyWineFact {
+function getSeason(date: Date): Season {
+  const month = date.getMonth();
+  if (month === 11 || month <= 1) return 'winter';
+  if (month <= 4) return 'spring';
+  if (month <= 7) return 'summer';
+  return 'autumn';
+}
+
+function getTimeOfDay(date: Date): TimeOfDay {
+  const hour = date.getHours();
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}
+
+function getCellarCategoryWeights(wines: Wine[]): Partial<Record<DailyWineFactCategory, number>> {
+  if (!wines.length) return {};
+
+  const styleCounts = wines.reduce<Record<string, number>>((counts, wine) => {
+    counts[wine.style] = (counts[wine.style] ?? 0) + Math.max(wine.quantity, 1);
+    return counts;
+  }, {});
+
+  const redShare = (styleCounts.red ?? 0) / wines.length;
+  const whiteLikeShare = ((styleCounts.white ?? 0) + (styleCounts.rose ?? 0) + (styleCounts.sparkling ?? 0)) / wines.length;
+  const sparklingShare = (styleCounts.sparkling ?? 0) / wines.length;
+
+  const ratedCount = wines.filter((wine) => typeof wine.personalRating === 'number').length;
+  const cellarHasDepth = wines.length >= 18 || ratedCount >= 8;
+
+  return {
+    structure: redShare >= 0.45 ? 1.4 : 0,
+    aging: redShare >= 0.45 ? 1.1 : 0,
+    pairing: redShare >= 0.35 ? 0.9 : 0.7,
+    service: whiteLikeShare >= 0.4 ? 1.2 : 0,
+    sparkling: sparklingShare >= 0.12 ? 1.4 : 0.3,
+    grape: whiteLikeShare >= 0.4 ? 0.8 : 0.4,
+    cellar: cellarHasDepth ? 1.2 : 0.2,
+    region: wines.length >= 10 ? 0.6 : 0,
+  };
+}
+
+function getCategoryBaseScore(category: DailyWineFactCategory, dateKey: number) {
+  const targetIndex = dateKey % DAILY_WINE_FACT_CATEGORY_ORDER.length;
+  const currentIndex = DAILY_WINE_FACT_CATEGORY_ORDER.indexOf(category);
+  const directDistance = Math.abs(currentIndex - targetIndex);
+  const wrappedDistance = DAILY_WINE_FACT_CATEGORY_ORDER.length - directDistance;
+  const distance = Math.min(directDistance, wrappedDistance);
+  return DAILY_WINE_FACT_CATEGORY_ORDER.length - distance;
+}
+
+function getCategoryScore(
+  category: DailyWineFactCategory,
+  date: Date,
+  dateKey: number,
+  cellarWeights: Partial<Record<DailyWineFactCategory, number>>,
+) {
+  const season = getSeason(date);
+  const timeOfDay = getTimeOfDay(date);
+  const seasonalWeight = SEASONAL_CATEGORY_WEIGHTS[season][category] ?? 0;
+  const timeWeight = TIME_OF_DAY_WEIGHTS[timeOfDay][category] ?? 0;
+  const cellarWeight = cellarWeights[category] ?? 0;
+
+  return getCategoryBaseScore(category, dateKey) + seasonalWeight + timeWeight + cellarWeight;
+}
+
+export function getDailyWineFact(date = new Date(), wines: Wine[] = []): DailyWineFact {
   const dateKey = getLocalDateKey(date);
-  const category = DAILY_WINE_FACT_CATEGORY_ORDER[dateKey % DAILY_WINE_FACT_CATEGORY_ORDER.length];
+  const cellarWeights = getCellarCategoryWeights(wines);
+  const rankedCategories = [...DAILY_WINE_FACT_CATEGORY_ORDER].sort((a, b) => {
+    const scoreDifference = getCategoryScore(b, date, dateKey, cellarWeights) - getCategoryScore(a, date, dateKey, cellarWeights);
+    if (scoreDifference !== 0) return scoreDifference;
+    return DAILY_WINE_FACT_CATEGORY_ORDER.indexOf(a) - DAILY_WINE_FACT_CATEGORY_ORDER.indexOf(b);
+  });
+
+  const category = rankedCategories[0];
   const categoryFacts = DAILY_WINE_FACTS.filter((fact) => fact.category === category);
 
   if (!categoryFacts.length) {
