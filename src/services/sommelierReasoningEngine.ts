@@ -1,5 +1,5 @@
+import { WineProfile, mapWineToProfile } from './wineAttributeMapper';
 import { WeatherRecommendationContext } from '../utils/tonightsBottleWeatherMatrix';
-import { getDrinkabilityInfo } from '../utils/drinkWindow';
 import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
 
 export type SommelierQueryType =
@@ -26,22 +26,6 @@ export interface DishProfile {
   needs: string[];
   principle: string;
   expected: string;
-}
-
-export interface WineProfile {
-  styleFamily: string;
-  body: string;
-  acidity: string;
-  tannin: string;
-  texture: string;
-  fruitProfile: string;
-  minerality: string;
-  finish: string;
-  readiness: string;
-  earthiness: string;
-  freshness: string;
-  richness: string;
-  keyTraits: string[];
 }
 
 export interface SommelierReasoning {
@@ -296,85 +280,6 @@ function determineToneMode(intent: SommelierQueryType, wine: Wine, query: string
   return shouldUsePlayfulTone(intent, wine, query) ? 'playful' : intent === 'special' || isPrestigeBottle(wine) ? 'refined' : 'warm';
 }
 
-function readinessPhrase(wine: Wine) {
-  const status = getDrinkabilityInfo(wine).status;
-  if (status === 'Peak window') return 'right in its peak window';
-  if (status === 'Ready to drink') return 'ready to open now';
-  if (status === 'Nearing end of peak') return 'well worth opening soon';
-  if (status === 'Approaching window') return 'just beginning to look interesting';
-  if (status === 'Too young') return 'still a little youthful, but compelling if you want freshness';
-  return 'a bottle to open with a little curiosity';
-}
-
-function stylePhrase(wine: Wine) {
-  if (wine.varietal) return wine.varietal;
-  return wine.style.replace('-', ' ');
-}
-
-function inferWineProfile(wine: Wine): WineProfile {
-  const source = [wine.varietal, wine.style, wine.tastingNotes, wine.aiAdvice, wine.foodPairingNotes, wine.name, wine.region].join(' ').toLowerCase();
-  const keyTraits: string[] = [];
-
-  const acidity = includesAny(source, ['sauvignon', 'riesling', 'chenin', 'chablis', 'citrus', 'bright', 'fresh', 'crisp', 'lifted'])
-    ? 'bright acidity'
-    : includesAny(source, ['chardonnay', 'pinot gris', 'stone fruit', 'orchard'])
-      ? 'moderate freshness'
-      : 'steady freshness';
-  keyTraits.push(acidity);
-
-  const body = includesAny(source, ['cabernet', 'syrah', 'shiraz', 'malbec', 'full', 'rich', 'bold'])
-    ? 'fuller body'
-    : includesAny(source, ['pinot', 'gamay', 'rose', 'rosé', 'light', 'delicate'])
-      ? 'lighter body'
-      : 'medium body';
-  keyTraits.push(body);
-
-  const tannin = includesAny(source, ['cabernet', 'nebbiolo', 'syrah', 'malbec', 'tannin', 'structured'])
-    ? 'firm tannin'
-    : includesAny(source, ['pinot', 'gamay', 'soft', 'silky'])
-      ? 'gentle tannin'
-      : 'soft structure';
-
-  const texture = includesAny(source, ['cream', 'round', 'texture', 'butter', 'polished'])
-    ? 'round texture'
-    : includesAny(source, ['sparkling', 'taut', 'lean', 'precise'])
-      ? 'taut texture'
-      : 'supple texture';
-  keyTraits.push(texture);
-
-  const fruitProfile = includesAny(source, ['cherry', 'berry', 'red fruit', 'pinot', 'grenache', 'gamay'])
-    ? 'red-fruited'
-    : includesAny(source, ['blackberry', 'plum', 'dark fruit', 'cabernet', 'syrah', 'malbec'])
-      ? 'darker-fruited'
-      : includesAny(source, ['citrus', 'lemon', 'lime', 'green apple'])
-        ? 'citrusy'
-        : includesAny(source, ['pear', 'apple', 'stone fruit', 'peach'])
-          ? 'orchard-fruited'
-          : 'fruit-led';
-
-  const minerality = includesAny(source, ['mineral', 'chalk', 'saline', 'shell', 'chablis']) ? 'mineral lift' : 'soft mineral edge';
-  const finish = includesAny(source, ['long finish', 'persistent', 'saline', 'clean finish']) ? 'clean finish' : 'polished finish';
-  const earthiness = includesAny(source, ['earth', 'savory', 'mushroom', 'forest', 'leather']) ? 'earthy' : 'clean-lined';
-  const freshness = acidity.includes('bright') ? 'lifted' : 'calm';
-  const richness = body.includes('fuller') || texture.includes('round') ? 'generous' : 'measured';
-
-  return {
-    styleFamily: stylePhrase(wine),
-    body,
-    acidity,
-    tannin,
-    texture,
-    fruitProfile,
-    minerality,
-    finish,
-    readiness: readinessPhrase(wine),
-    earthiness,
-    freshness,
-    richness,
-    keyTraits: Array.from(new Set([...keyTraits, fruitProfile, finish])).slice(0, 4),
-  };
-}
-
 function tastingPhrase(wine: Wine) {
   if (wine.tastingNotes) return compactText(wine.tastingNotes, 96);
   if (wine.aiAdvice) return compactText(wine.aiAdvice, 96);
@@ -507,7 +412,7 @@ export function buildSommelierReasoning(input: SommelierRecommendationInput): So
   const queryType = classifySommelierQuery(input.query ?? '', input.weatherContext);
   const queryLabel = getQueryLabel(input.query, input.weatherContext, context);
   const dishProfile = buildDishProfile(queryType, input.query ?? '', input.weatherContext);
-  const wineProfile = inferWineProfile(input.wine);
+  const wineProfile = mapWineToProfile(input.wine);
   const pairingMode = determinePairingMode(queryType, getPairingPrinciple(input.query ?? '', input.weatherContext));
   const toneMode = determineToneMode(queryType, input.wine, input.query ?? '');
   const matchSignals = [
@@ -533,7 +438,7 @@ export function buildSommelierReasoning(input: SommelierRecommendationInput): So
 
 export function composeSommelierRecommendation(reasoning: SommelierReasoning, wine: Wine, match?: NaturalLanguageSearchMatch, query = ''): SommelierRecommendation {
   const { queryType: intent, dishProfile, wineProfile, toneMode, context } = reasoning;
-  const style = wineProfile.styleFamily;
+  const style = wineProfile.styleLabel;
   const readiness = wineProfile.readiness;
   const tasting = tastingPhrase(wine);
   const pairing = pairingPhrase(wine);
