@@ -1,3 +1,4 @@
+import { FoodProfile, dishCanHandleTannin, dishWantsAcidity, dishWantsBubbles, mapQueryToFoodProfile } from './foodAttributeMapper';
 import { WineProfile, mapWineToProfile } from './wineAttributeMapper';
 import { WeatherRecommendationContext } from '../utils/tonightsBottleWeatherMatrix';
 import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
@@ -33,6 +34,7 @@ export interface SommelierReasoning {
   queryLabel: string;
   context: SommelierContext;
   dishProfile: DishProfile | null;
+  foodProfile: FoodProfile | null;
   wineProfile: WineProfile;
   pairingMode: PairingMode;
   matchSignals: string[];
@@ -96,8 +98,18 @@ function pickPhrase(options: string[], seed: string) {
   return options[stableIndex(seed, options.length)];
 }
 
+function hasMeaningfulFoodSignal(profile: FoodProfile) {
+  return Boolean(
+    profile.matchedArchetype
+    || profile.categories.some((category) => category !== 'general')
+    || profile.occasionCues.length
+    || profile.matchedTerms.length >= 2,
+  );
+}
+
 export function classifySommelierQuery(query = '', weatherContext?: WeatherRecommendationContext | null): SommelierQueryType {
   const normalized = query.toLowerCase();
+  const foodProfile = mapQueryToFoodProfile(query);
 
   if (!normalized && weatherContext) {
     if (weatherContext.temperatureBand === 'warm' || weatherContext.temperatureBand === 'hot') return 'patio';
@@ -117,11 +129,11 @@ export function classifySommelierQuery(query = '', weatherContext?: WeatherRecom
     return 'casual';
   }
 
-  if (includesAny(normalized, ['pair', 'food', 'seafood', 'salmon', 'steak', 'pasta', 'cheese', 'mushroom', 'fried'])) {
+  if (includesAny(normalized, ['pair', 'food']) || hasMeaningfulFoodSignal(foodProfile) && foodProfile.categories.some((category) => category !== 'general')) {
     return 'pairing';
   }
 
-  if (includesAny(normalized, ['friends', 'party', 'company', 'host', 'group', 'dinner', 'date night'])) {
+  if (includesAny(normalized, ['friends', 'party', 'company', 'host', 'group', 'dinner', 'date night']) || foodProfile.occasionCues.includes('dinner_party') || foodProfile.occasionCues.includes('elegant')) {
     return 'occasion';
   }
 
@@ -140,108 +152,55 @@ export function classifySommelierQuery(query = '', weatherContext?: WeatherRecom
   return 'general';
 }
 
-function getPairingPrinciple(query = '', weatherContext?: WeatherRecommendationContext | null): PairingPrinciple | null {
-  const normalized = query.toLowerCase();
+function getFoodPairingPrinciple(foodProfile: FoodProfile, weatherContext?: WeatherRecommendationContext | null): PairingPrinciple | null {
+  if (hasMeaningfulFoodSignal(foodProfile) && foodProfile.categories.some((category) => category !== 'general')) {
+    const needs: string[] = [];
+    if (dishWantsAcidity(foodProfile)) needs.push('brightness');
+    if (foodProfile.pairingNeeds.includes('wants_freshness')) needs.push('freshness');
+    if (dishCanHandleTannin(foodProfile)) needs.push('structure');
+    if (foodProfile.pairingNeeds.includes('wants_texture_echo')) needs.push('texture');
+    if (foodProfile.pairingNeeds.includes('wants_bubbles')) needs.push('bubbles');
+    if (foodProfile.pairingNeeds.includes('wants_fruit_support')) needs.push('fruit support');
 
-  if (includesAny(normalized, ['goat cheese', 'chèvre', 'chevre'])) {
+    const matchType: PairingMode =
+      dishWantsAcidity(foodProfile) || dishWantsBubbles(foodProfile) || foodProfile.pairingNeeds.includes('wants_contrast')
+        ? 'contrast'
+        : foodProfile.pairingNeeds.includes('wants_texture_echo') || foodProfile.pairingNeeds.includes('wants_richness_match')
+          ? 'echo'
+          : 'bridge';
+
+    const label = foodProfile.matchedArchetype ?? (foodProfile.queryText.trim() || 'this dish');
+    const texture = foodProfile.textureTraits.map((trait) => trait.replace(/_/g, ' ')).slice(0, 2).join(' and ') || 'balanced';
+    const dominantFlavors = foodProfile.flavorFamilies.map((flavor) => flavor.replace(/_/g, ' ')).slice(0, 3);
+    const principle =
+      dishWantsBubbles(foodProfile)
+        ? `${label.charAt(0).toUpperCase() + label.slice(1)} usually benefits from freshness or bubbles, with enough lift to keep the dish feeling lively rather than heavy.`
+        : dishCanHandleTannin(foodProfile)
+          ? `${label.charAt(0).toUpperCase() + label.slice(1)} can handle a wine with structure, because the richness of the dish gives tannin and darker fruit somewhere useful to land.`
+          : dishWantsAcidity(foodProfile)
+            ? `${label.charAt(0).toUpperCase() + label.slice(1)} usually wants brightness and lift, so the best pairings keep pace with the dish instead of feeling flat or heavy.`
+            : `${label.charAt(0).toUpperCase() + label.slice(1)} works best when the wine matches its shape and texture without overwhelming the plate.`;
+    const expected =
+      matchType === 'echo'
+        ? 'Expect the pairing to feel layered and harmonious, with the wine echoing the dish rather than fighting it.'
+        : matchType === 'contrast'
+          ? 'Expect the wine to bring a little lift and relief, helping the dish feel cleaner and more complete.'
+          : 'Expect the wine to meet the dish in the middle, connecting through texture, savoriness, or freshness.';
+
     return {
-      label: 'goat cheese',
-      matchType: 'contrast',
+      label,
+      matchType,
       category: 'food',
-      weight: 'light',
-      texture: 'creamy and tangy',
-      dominantFlavors: ['tangy', 'fresh', 'herbal'],
-      needs: ['brightness', 'lift', 'clean finish'],
-      principle: 'Goat cheese usually loves brightness, lift, and a clean finish; acidity keeps the tang lively instead of heavy.',
-      expected: 'Expect a fresh, lightly textured match that cuts through the creaminess without bullying the cheese.',
+      weight: foodProfile.weight === 'heavy' ? 'rich' : foodProfile.weight,
+      texture,
+      dominantFlavors,
+      needs: needs.length ? needs : ['balance', 'freshness'],
+      principle,
+      expected,
     };
   }
 
-  if (includesAny(normalized, ['salmon', 'fish', 'seafood'])) {
-    return {
-      label: includesAny(normalized, ['salmon']) ? 'salmon' : 'seafood',
-      matchType: 'bridge',
-      category: 'food',
-      weight: 'medium',
-      texture: 'silky and rich',
-      dominantFlavors: ['briny', 'clean', 'savory'],
-      needs: ['freshness', 'enough body', 'soft texture'],
-      principle: 'Salmon wants freshness and texture: enough acidity to keep the fish bright, with enough body to meet its richness.',
-      expected: 'Expect a pairing that feels clean, polished, and food-friendly rather than sharp or thin.',
-    };
-  }
-
-  if (includesAny(normalized, ['steak', 'ribeye', 'burger', 'beef'])) {
-    return {
-      label: includesAny(normalized, ['burger']) ? 'burgers' : 'steak',
-      matchType: 'contrast',
-      category: 'food',
-      weight: 'rich',
-      texture: 'fatty and charred',
-      dominantFlavors: ['savory', 'smoky', 'rich'],
-      needs: ['structure', 'tannin', 'depth'],
-      principle: 'Steak generally likes structure: tannin, darker fruit, and enough body to stand up to fat and char.',
-      expected: 'Expect a deeper, more savory glass that can handle the richness instead of disappearing beside it.',
-    };
-  }
-
-  if (includesAny(normalized, ['pasta', 'tomato', 'pizza'])) {
-    return {
-      label: includesAny(normalized, ['pizza']) ? 'pizza' : 'pasta',
-      matchType: 'bridge',
-      category: 'food',
-      weight: 'medium',
-      texture: 'saucy',
-      dominantFlavors: ['bright', 'savory', 'herbal'],
-      needs: ['freshness', 'moderate body', 'bright fruit'],
-      principle: 'Tomato and pasta tend to reward freshness, moderate body, and fruit that does not fight the sauce.',
-      expected: 'Expect something table-friendly and easy to keep reaching for between bites.',
-    };
-  }
-
-  if (includesAny(normalized, ['mushroom', 'mushrooms', 'risotto'])) {
-    return {
-      label: includesAny(normalized, ['risotto']) ? 'mushroom risotto' : 'mushrooms',
-      matchType: 'echo',
-      category: 'food',
-      weight: 'medium',
-      texture: 'savory and earthy',
-      dominantFlavors: ['earthy', 'umami', 'woodsy'],
-      needs: ['earthiness', 'savory depth', 'texture'],
-      principle: 'Mushroom dishes usually like wines with earth, savory depth, or softly red-fruited lift — something that echoes their depth rather than fighting it.',
-      expected: 'Expect a pairing that feels layered and quietly satisfying, with the wine picking up the savory side of the dish.',
-    };
-  }
-
-  if (includesAny(normalized, ['fried', 'fried chicken', 'tempura'])) {
-    return {
-      label: includesAny(normalized, ['fried chicken']) ? 'fried chicken' : 'fried food',
-      matchType: 'contrast',
-      category: 'food',
-      weight: 'rich',
-      texture: 'crisp and fatty',
-      dominantFlavors: ['salty', 'rich', 'crispy'],
-      needs: ['acid or bubbles', 'freshness', 'palate reset'],
-      principle: 'Fried food usually wants acid, bubbles, or both — something to reset the palate and keep each bite lively instead of heavy.',
-      expected: 'Expect the wine to clean things up between bites rather than adding more weight.',
-    };
-  }
-
-  if (includesAny(normalized, ['cheese'])) {
-    return {
-      label: 'cheese',
-      matchType: 'contrast',
-      category: 'food',
-      weight: 'medium',
-      texture: 'salty and creamy',
-      dominantFlavors: ['salty', 'creamy'],
-      needs: ['cleansing acidity', 'texture', 'fruit softness'],
-      principle: 'Cheese usually works best when the wine has either cleansing acidity, generous texture, or enough fruit to soften salt and cream.',
-      expected: 'Expect the wine to refresh the palate while keeping the pairing relaxed.',
-    };
-  }
-
-  if (weatherContext && !normalized) {
+  if (weatherContext && !foodProfile.queryText.trim()) {
     const isWarm = weatherContext.temperatureBand === 'warm' || weatherContext.temperatureBand === 'hot';
     return {
       label: isWarm ? 'the evening' : 'tonight',
@@ -325,7 +284,8 @@ function contextualLead(intent: SommelierQueryType, style: string, query: string
 }
 
 function buildDishProfile(queryType: SommelierQueryType, query: string, weatherContext?: WeatherRecommendationContext | null): DishProfile | null {
-  const principle = getPairingPrinciple(query, weatherContext);
+  const foodProfile = mapQueryToFoodProfile(query);
+  const principle = getFoodPairingPrinciple(foodProfile, weatherContext);
   if (principle) {
     return {
       label: principle.label,
@@ -387,12 +347,16 @@ function buildSupportChips(
   queryType: SommelierQueryType,
   wineProfile: WineProfile,
   wine: Wine,
+  foodProfile: FoodProfile | null,
   match?: NaturalLanguageSearchMatch,
 ) {
   const chips = [wineProfile.acidity, wineProfile.texture, wineProfile.finish];
   if (queryType === 'drink-now' || match?.readinessBoost) chips.push('Ready now');
   if (wineProfile.tannin.includes('firm')) chips.push('Firm tannin');
   if (wineProfile.fruitProfile) chips.push(sentenceCase(wineProfile.fruitProfile));
+  if (foodProfile?.pairingNeeds.includes('wants_bubbles')) chips.push('Bubble-friendly');
+  if (foodProfile?.pairingNeeds.includes('wants_acidity')) chips.push('Acid-seeking dish');
+  if (foodProfile?.pairingNeeds.includes('can_handle_tannin')) chips.push('Can handle tannin');
   if (wine.foodPairingNotes) chips.push('Pairing notes');
   if (match?.qualityBoost) chips.push('Rating signal');
   return Array.from(new Set(chips)).slice(0, 3);
@@ -411,12 +375,14 @@ export function buildSommelierReasoning(input: SommelierRecommendationInput): So
   const context = input.context ?? 'search';
   const queryType = classifySommelierQuery(input.query ?? '', input.weatherContext);
   const queryLabel = getQueryLabel(input.query, input.weatherContext, context);
+  const foodProfile = input.query?.trim() ? mapQueryToFoodProfile(input.query) : null;
   const dishProfile = buildDishProfile(queryType, input.query ?? '', input.weatherContext);
   const wineProfile = mapWineToProfile(input.wine);
-  const pairingMode = determinePairingMode(queryType, getPairingPrinciple(input.query ?? '', input.weatherContext));
+  const pairingMode = determinePairingMode(queryType, getFoodPairingPrinciple(foodProfile ?? mapQueryToFoodProfile(''), input.weatherContext));
   const toneMode = determineToneMode(queryType, input.wine, input.query ?? '');
   const matchSignals = [
     ...(dishProfile?.needs ?? []),
+    ...(foodProfile?.matchedTerms ?? []),
     ...wineProfile.keyTraits,
     input.match?.reason ? input.match.reason : '',
   ].filter(Boolean).slice(0, 6);
@@ -426,12 +392,13 @@ export function buildSommelierReasoning(input: SommelierRecommendationInput): So
     queryLabel,
     context,
     dishProfile,
+    foodProfile,
     wineProfile,
     pairingMode,
     matchSignals,
     confidence: computeConfidence(queryType, input.wine, input.match),
     keyTraits: wineProfile.keyTraits,
-    supportChips: buildSupportChips(queryType, wineProfile, input.wine, input.match),
+    supportChips: buildSupportChips(queryType, wineProfile, input.wine, foodProfile, input.match),
     toneMode,
   };
 }

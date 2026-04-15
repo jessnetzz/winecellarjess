@@ -88,7 +88,7 @@ function BestMatchCard({
   onDeleteWine: (wine: Wine) => void;
 }) {
   const sommelierNote = getBestMatchNote(wine, match, query);
-  const profileSummary = getProfileSearchSummary(wine);
+  const profileSummary = getProfileSearchSummary(wine, query);
 
   return (
     <article className="best-match-card">

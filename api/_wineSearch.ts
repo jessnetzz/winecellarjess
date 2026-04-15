@@ -1,4 +1,5 @@
-import { getProfileSearchBoost, getWineProfileTags } from '../src/services/wineProfileSelectors';
+import { mapQueryToFoodProfile } from '../src/services/foodAttributeMapper';
+import { getFoodAndWineMatchReason, getProfileSearchBoost, getWineProfileTags, hasMeaningfulFoodSignal } from '../src/services/wineProfileSelectors';
 import { mapWineToProfile } from '../src/services/wineAttributeMapper';
 import type { Wine, WineStyle, WineStatus } from '../src/types/wine';
 
@@ -275,9 +276,13 @@ export function getQualityBoost(wine: SearchWineRow) {
 
 export function reasonForMatch(query: string, wine: SearchWineRow, document: string) {
   const profile = getSearchWineProfile(wine);
+  const foodProfile = mapQueryToFoodProfile(query);
   const profileBoost = getProfileSearchBoost(query, profile);
   const queryText = normalize(query);
   const docText = normalize(document);
+  if (query.trim() && hasMeaningfulFoodSignal(foodProfile)) {
+    return getFoodAndWineMatchReason(profile, foodProfile);
+  }
   if (queryText.includes('seafood') && docText.includes('seafood')) return 'Matched seafood pairing notes.';
   if (queryText.includes('steak') && docText.includes('steak')) return 'Matched bold dinner pairing notes.';
   if ((queryText.includes('ready') || queryText.includes('tonight')) && (profile.readinessTag === 'ready_now' || profile.readinessTag === 'peak_window')) {

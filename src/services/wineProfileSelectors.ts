@@ -1,3 +1,4 @@
+import { FoodProfile, dishCanHandleTannin, dishIsComfortFood, dishIsPatioFriendly, dishWantsAcidity, dishWantsBubbles, mapQueryToFoodProfile } from './foodAttributeMapper';
 import { WineFlavorFamily, WinePairingTendency, WineProfile, WineReadinessTag, WineStyleFamily, WineTextureTrait } from './wineAttributeMapper';
 
 export type ProfileTemperatureBand = 'cold' | 'cool' | 'mild' | 'warm' | 'hot';
@@ -281,8 +282,61 @@ function readinessBoost(tag: WineReadinessTag) {
   return 0;
 }
 
+export function hasMeaningfulFoodSignal(foodProfile: FoodProfile) {
+  return Boolean(
+    foodProfile.matchedArchetype
+    || foodProfile.categories.some((category) => category !== 'general')
+    || foodProfile.occasionCues.length
+    || foodProfile.matchedTerms.length >= 2,
+  );
+}
+
+function queryLabelForFood(foodProfile: FoodProfile) {
+  return (foodProfile.matchedArchetype ?? foodProfile.queryText).trim() || 'this dish';
+}
+
+export function getFoodAndWineMatchReason(profile: WineProfile, foodProfile: FoodProfile) {
+  const dishLabel = queryLabelForFood(foodProfile);
+  const style = profile.styleLabel.toLowerCase();
+
+  if (!hasMeaningfulFoodSignal(foodProfile)) {
+    return `This bottle rises here because its ${profile.texture}, ${profile.fruitProfile} profile, and ${profile.readiness} make it a flexible match.`;
+  }
+
+  if (dishWantsBubbles(foodProfile) && profile.styleFamily === 'sparkling') {
+    return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} usually likes lift and palate reset, and this ${style} brings exactly that.`;
+  }
+
+  if (dishCanHandleTannin(foodProfile) && isBoldRed(profile)) {
+    return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} can handle a wine with structure, and this ${style} has enough tannin and depth to meet it well.`;
+  }
+
+  if (dishWantsAcidity(foodProfile) && (profile.acidityLevel === 'high' || profile.acidityLevel === 'medium_plus')) {
+    return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} usually wants brightness and lift, and this ${style} has the acidity to keep the pairing lively.`;
+  }
+
+  if (foodProfile.pairingNeeds.includes('dislikes_heavy_tannin') && !isBoldRed(profile)) {
+    return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} is usually happier with gentler structure, and this ${style} stays on the softer, more food-friendly side.`;
+  }
+
+  if (foodProfile.pairingNeeds.includes('wants_texture_echo') && (hasTexture(profile, 'creamy') || hasTexture(profile, 'silky') || hasTexture(profile, 'round'))) {
+    return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} has a strong texture story, and this ${style} answers it with ${profile.texture} and a ${profile.finish}.`;
+  }
+
+  if (foodProfile.pairingNeeds.includes('wants_freshness') && (hasTexture(profile, 'refreshing') || hasFlavor(profile, 'citrus') || hasFlavor(profile, 'mineral'))) {
+    return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} wants a wine with freshness, and this ${style} has the lift to keep everything feeling clean and complete.`;
+  }
+
+  if (foodProfile.pairingNeeds.includes('wants_fruit_support') && (hasFlavor(profile, 'red_fruit') || hasFlavor(profile, 'dark_fruit') || hasFlavor(profile, 'orchard_fruit'))) {
+    return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} benefits from a little fruit generosity, and this ${style} has enough ${profile.fruitProfile} character to help.`;
+  }
+
+  return `${dishLabel.charAt(0).toUpperCase() + dishLabel.slice(1)} looks like a natural fit for this bottle: the pairing lands through ${profile.texture}, ${profile.fruitProfile} character, and ${profile.readiness}.`;
+}
+
 export function getProfileSearchBoost(query: string, profile: WineProfile): ProfileSearchBoost {
   const normalized = query.toLowerCase();
+  const foodProfile = mapQueryToFoodProfile(query);
   let score = 0;
   const reasons: string[] = [];
 
@@ -296,6 +350,10 @@ export function getProfileSearchBoost(query: string, profile: WineProfile): Prof
       addReason(reasons, 'Deeper flavor profile');
     }
   }
+  if (dishIsComfortFood(foodProfile) && isCozyBottle(profile)) {
+    score += 0.04;
+    addReason(reasons, 'Comfort-food fit');
+  }
 
   if (includesAny(normalized, ['patio', 'summer', 'porch', 'picnic', 'easy', 'outside'])) {
     if (isPatioBottle(profile)) {
@@ -307,8 +365,12 @@ export function getProfileSearchBoost(query: string, profile: WineProfile): Prof
       addReason(reasons, 'Refreshing structure');
     }
   }
+  if (dishIsPatioFriendly(foodProfile) && isPatioBottle(profile)) {
+    score += 0.05;
+    addReason(reasons, 'Patio dish fit');
+  }
 
-  if (includesAny(normalized, ['seafood', 'fish', 'salmon', 'oyster', 'shrimp'])) {
+  if (includesAny(normalized, ['seafood', 'fish', 'salmon', 'oyster', 'shrimp']) || foodProfile.categories.includes('seafood') || foodProfile.categories.includes('fish') || foodProfile.categories.includes('shellfish')) {
     if (isSeafoodFriendly(profile)) {
       score += 0.09;
       addReason(reasons, 'Seafood-friendly profile');
@@ -319,14 +381,14 @@ export function getProfileSearchBoost(query: string, profile: WineProfile): Prof
     }
   }
 
-  if (includesAny(normalized, ['goat cheese', 'cheese', 'chèvre', 'chevre'])) {
+  if (includesAny(normalized, ['goat cheese', 'cheese', 'chèvre', 'chevre']) || foodProfile.categories.includes('cheese')) {
     if (hasPairing(profile, 'goat_cheese_friendly') || hasPairing(profile, 'cheese_friendly')) {
       score += 0.08;
       addReason(reasons, 'Cheese-friendly profile');
     }
   }
 
-  if (includesAny(normalized, ['steak', 'burger', 'lamb', 'grilled', 'bold', 'rich'])) {
+  if (includesAny(normalized, ['steak', 'burger', 'lamb', 'grilled', 'bold', 'rich']) || dishCanHandleTannin(foodProfile)) {
     if (hasPairing(profile, 'steak_friendly') || hasPairing(profile, 'grilled_food_friendly') || isBoldRed(profile)) {
       score += 0.09;
       addReason(reasons, 'Structured for richer food');
@@ -337,6 +399,28 @@ export function getProfileSearchBoost(query: string, profile: WineProfile): Prof
     if (hasPairing(profile, 'dinner_party_friendly') || hasPairing(profile, 'celebration_friendly') || hasPairing(profile, 'crowd_pleaser')) {
       score += 0.06;
       addReason(reasons, 'Good social-bottle fit');
+    }
+  }
+  if (hasMeaningfulFoodSignal(foodProfile)) {
+    if (dishWantsBubbles(foodProfile) && profile.styleFamily === 'sparkling') {
+      score += 0.08;
+      addReason(reasons, 'Bubble-friendly pairing');
+    }
+    if (dishWantsAcidity(foodProfile) && (profile.acidityLevel === 'high' || profile.acidityLevel === 'medium_plus')) {
+      score += 0.05;
+      addReason(reasons, 'Bright enough for the dish');
+    }
+    if (foodProfile.pairingNeeds.includes('dislikes_heavy_tannin') && !isBoldRed(profile)) {
+      score += 0.04;
+      addReason(reasons, 'Gentler tannin fit');
+    }
+    if (foodProfile.pairingNeeds.includes('wants_texture_echo') && (hasTexture(profile, 'creamy') || hasTexture(profile, 'silky') || hasPairing(profile, 'mushroom_friendly') || hasPairing(profile, 'creamy_dish_friendly'))) {
+      score += 0.05;
+      addReason(reasons, 'Texture echo');
+    }
+    if (foodProfile.pairingNeeds.includes('wants_fruit_support') && (hasFlavor(profile, 'red_fruit') || hasFlavor(profile, 'dark_fruit') || hasFlavor(profile, 'orchard_fruit'))) {
+      score += 0.04;
+      addReason(reasons, 'Fruit support');
     }
   }
 

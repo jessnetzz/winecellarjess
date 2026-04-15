@@ -1,6 +1,7 @@
 import { buildSommelierRecommendation } from '../services/sommelierReasoningEngine';
+import { mapQueryToFoodProfile } from '../services/foodAttributeMapper';
 import { mapWineToProfile } from '../services/wineAttributeMapper';
-import { getProfileContextSummary, getProfileSupportChips } from '../services/wineProfileSelectors';
+import { getFoodAndWineMatchReason, getProfileContextSummary, getProfileSupportChips, hasMeaningfulFoodSignal } from '../services/wineProfileSelectors';
 import { NaturalLanguageSearchMatch, Wine } from '../types/wine';
 
 export function getSearchMatchLabel(match: NaturalLanguageSearchMatch) {
@@ -44,6 +45,13 @@ export function getBestMatchSummary(wine: Wine, match?: NaturalLanguageSearchMat
   return getBestMatchNote(wine, match, query).body;
 }
 
-export function getProfileSearchSummary(wine: Wine) {
-  return getProfileContextSummary(mapWineToProfile(wine), 'search');
+export function getProfileSearchSummary(wine: Wine, query = '') {
+  const wineProfile = mapWineToProfile(wine);
+  const foodProfile = mapQueryToFoodProfile(query);
+
+  if (query.trim() && hasMeaningfulFoodSignal(foodProfile)) {
+    return getFoodAndWineMatchReason(wineProfile, foodProfile);
+  }
+
+  return getProfileContextSummary(wineProfile, 'search');
 }
