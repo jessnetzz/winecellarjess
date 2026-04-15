@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import DrinkStatusBadge from './DrinkStatusBadge';
 import { getLocalWeather, LocalWeather } from '../services/localWeatherService';
 import { mapWineToProfile } from '../services/wineAttributeMapper';
 import { getProfileSupportChips } from '../services/wineProfileSelectors';
 import { buildSommelierRecommendation } from '../services/sommelierReasoningEngine';
 import { Wine } from '../types/wine';
+import { isDrinkableNow } from '../utils/drinkWindow';
 import {
   getRecommendationScoreBreakdown,
   getWeatherContextLabel,
@@ -43,7 +43,7 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
   const candidates = useMemo(
     () =>
       wines
-        .filter((wine) => wine.status !== 'consumed' && wine.quantity > 0)
+        .filter((wine) => wine.status !== 'consumed' && wine.quantity > 0 && isDrinkableNow(wine))
         .sort((a, b) => {
           const scoreDifference = scoreTonightsBottle(b, weatherContext) - scoreTonightsBottle(a, weatherContext);
           if (scoreDifference !== 0) return scoreDifference;
@@ -106,55 +106,52 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
       </section>
     );
   }
-
-  const location = [wine.appellation || wine.region, wine.country].filter(Boolean).join(', ');
-
   return (
-    <section className="tonights-bottle-card space-y-4" aria-labelledby="tonights-bottle-heading">
+    <section className="tonights-bottle-card space-y-5" aria-labelledby="tonights-bottle-heading">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-white/70 px-2.5 py-1">
+        <div className="min-w-0 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-plum/18 bg-white/78 px-3 py-1.5 shadow-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
-            <p id="tonights-bottle-heading" className="section-kicker text-[11px] text-plum/85">Tonight’s Bottle</p>
+            <p id="tonights-bottle-heading" className="text-[12px] font-bold uppercase tracking-[0.16em] text-plum">Tonight’s Bottle</p>
           </div>
-          <h2 className="mt-2 font-serif text-[1.9rem] font-bold leading-[1.05] text-ink">
+          {weatherContextLabel ? (
+            <p className="mx-auto mt-3 inline-flex max-w-fit items-center justify-center rounded-full border border-lavender/18 bg-lavender/18 px-3 py-1.5 text-xs font-semibold leading-5 text-plum shadow-sm">
+              {weatherContextLabel}
+            </p>
+          ) : null}
+          {!weatherContext && !weatherAttempted ? (
+            <p className="mt-3 text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>
+          ) : null}
+          <h2 className="mx-auto mt-4 max-w-[15ch] font-liam text-[1.32rem] font-normal leading-[1.12] text-ink sm:text-[1.48rem]">
             {wine.vintage} {wine.name}
           </h2>
-          <p className="mt-2 text-sm font-semibold text-smoke">{wine.producer}</p>
         </div>
         <span className="shrink-0 rounded-lg bg-gold/12 px-2.5 py-2 text-base" aria-hidden="true">🌙</span>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <DrinkStatusBadge wine={wine} compact />
-        {location ? <span className="rounded-md bg-white/70 px-2.5 py-1 text-xs font-semibold text-smoke">{location}</span> : null}
-      </div>
-      {weatherContextLabel ? (
-        <p className="rounded-md bg-lavender/18 px-2.5 py-1.5 text-xs font-semibold leading-5 text-plum">
-          {weatherContextLabel}
-        </p>
-      ) : null}
-      {!weatherContext && !weatherAttempted ? (
-        <p className="text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>
-      ) : null}
-
-      <div className="border-t border-gold/15 pt-4">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-[#7B5A22]">Tonight's note</p>
-        <p className="mt-2 font-serif text-[1.5rem] font-bold leading-[1.1] text-ink">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
-        <p className="mt-2 text-sm leading-6 text-ink/90">
+      <div className="rounded-lg border border-gold/15 bg-white/55 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-gold/18 bg-white/78 px-3 py-1.5 shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
+            <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#7B5A22]">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
+          </div>
+        </div>
+        <p className="mt-3 text-center text-sm leading-6 text-ink/90">
           {cardNoteSummary || tonightRecommendation?.body}
         </p>
         {hasFullNote && onSelectWine ? (
-          <button
-            className="ghost-button mt-2 px-0 py-0 text-xs font-bold uppercase tracking-wide text-plum"
-            type="button"
-            onClick={() => onSelectWine(wine)}
-          >
-            Read full note
-          </button>
+          <div className="mt-3 flex justify-center">
+            <button
+              className="ghost-button px-0 py-0 text-[11px] font-bold uppercase tracking-[0.14em] text-plum"
+              type="button"
+              onClick={() => onSelectWine(wine)}
+            >
+              Read full note
+            </button>
+          </div>
         ) : null}
         {tonightChips.length ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
             {tonightChips.map((chip) => (
               <span key={chip} className="rounded-md bg-paper px-2.5 py-1 text-[11px] font-semibold text-smoke">
                 {chip}
