@@ -4,7 +4,7 @@ import { getCellarInsights } from '../utils/cellarInsights';
 
 interface CellarInsightsProps {
   wines: Wine[];
-  variant?: 'full' | 'compact';
+  variant?: 'full' | 'compact' | 'hero';
 }
 
 const toneClasses = {
@@ -46,6 +46,33 @@ export default function CellarInsights({ wines, variant = 'full' }: CellarInsigh
                 <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/75 text-current shadow-sm">
                   <Icon name={insight.icon} className="h-3 w-3" />
                 </span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (variant === 'hero') {
+    return (
+      <section className="min-w-0 max-w-full" aria-labelledby="cellar-insights-hero-heading">
+        <p id="cellar-insights-hero-heading" className="section-kicker">
+          Little whispers from the cellar
+        </p>
+        <div className="cellar-stats-scroll mt-3">
+          {insights.slice(0, 4).map((insight) => (
+            <article
+              key={insight.id}
+              className={`interactive-surface flex min-w-[160px] max-w-[205px] shrink-0 items-start gap-2 rounded-lg border px-2.5 py-2 text-left shadow-sm hover:-translate-y-0.5 hover:shadow-subtle sm:min-w-[175px] sm:max-w-[220px] sm:px-3 sm:py-2.5 xl:min-w-0 xl:max-w-none ${toneClasses[insight.tone]}`}
+            >
+              <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/75 text-current shadow-sm">
+                <Icon name={insight.icon} className="h-3 w-3" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-current/70">{insight.label}</p>
+                <h3 className="mt-0.5 font-serif text-[0.9rem] leading-4.5 text-ink">{insight.headline}</h3>
+                <p className="mt-0.5 text-[10px] leading-3.5 text-smoke">{insight.supportingLine}</p>
               </div>
             </article>
           ))}
