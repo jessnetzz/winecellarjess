@@ -4,6 +4,7 @@ import { getCellarInsights } from '../utils/cellarInsights';
 
 interface CellarInsightsProps {
   wines: Wine[];
+  variant?: 'full' | 'compact';
 }
 
 const toneClasses = {
@@ -13,10 +14,45 @@ const toneClasses = {
   lavender: 'border-lavender/20 bg-gradient-to-br from-porcelain via-[#F7F2FA] to-[#F4EEF8] text-plum',
 } as const;
 
-export default function CellarInsights({ wines }: CellarInsightsProps) {
+export default function CellarInsights({ wines, variant = 'full' }: CellarInsightsProps) {
   const insights = getCellarInsights(wines);
 
   if (!insights.length) return null;
+
+  if (variant === 'compact') {
+    return (
+      <section className="metric-card min-h-[190px]">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="field-label text-plum">Little whispers</p>
+            <h2 className="mt-2 font-serif text-[1.7rem] font-bold leading-tight text-ink">From the cellar</h2>
+          </div>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-plum/10 text-plum">
+            <Icon name="sparkle" className="h-4.5 w-4.5" />
+          </span>
+        </div>
+        <div className="mt-4 grid gap-2.5">
+          {insights.slice(0, 3).map((insight) => (
+            <article
+              key={insight.id}
+              className={`interactive-surface rounded-md border px-3 py-2.5 shadow-sm transition duration-300 ease-out hover:-translate-y-0.5 hover:shadow-subtle ${toneClasses[insight.tone]}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-current/70">{insight.label}</p>
+                  <h3 className="mt-1 font-serif text-[0.98rem] leading-5 text-ink">{insight.headline}</h3>
+                  <p className="mt-1 text-[11px] leading-4 text-smoke">{insight.supportingLine}</p>
+                </div>
+                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/75 text-current shadow-sm">
+                  <Icon name={insight.icon} className="h-3 w-3" />
+                </span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel overflow-hidden">

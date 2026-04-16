@@ -15,7 +15,39 @@ interface PriorityGroup {
   subtitle: string;
   wines: Wine[];
   emptyMessage: string;
+  tone: 'moss' | 'gold' | 'plum' | 'lavender';
 }
+
+const priorityToneClasses = {
+  moss: {
+    heading: 'text-moss',
+    subtitle: 'text-moss/75',
+    card: 'border-moss/20 bg-gradient-to-br from-white to-[#F3F7F0] hover:border-moss/35',
+    chip: 'bg-[#EEF5EA] text-moss',
+    empty: 'border-moss/20 bg-[#F8FBF6] text-smoke',
+  },
+  gold: {
+    heading: 'text-[#8A6727]',
+    subtitle: 'text-[#8A6727]/75',
+    card: 'border-gold/22 bg-gradient-to-br from-white to-[#FCF7EC] hover:border-gold/38',
+    chip: 'bg-[#FAF1DE] text-[#8A6727]',
+    empty: 'border-gold/20 bg-[#FFF9EF] text-smoke',
+  },
+  plum: {
+    heading: 'text-vine',
+    subtitle: 'text-vine/75',
+    card: 'border-plum/20 bg-gradient-to-br from-white to-[#F8F1F7] hover:border-plum/36',
+    chip: 'bg-[#F3EAF6] text-plum',
+    empty: 'border-plum/20 bg-[#FCF7FD] text-smoke',
+  },
+  lavender: {
+    heading: 'text-[#B55F7F]',
+    subtitle: 'text-[#B55F7F]/75',
+    card: 'border-[#E7C4D1] bg-gradient-to-br from-white to-[#FDF1F5] hover:border-[#D991AC]',
+    chip: 'bg-[#FBE8EF] text-[#A85272]',
+    empty: 'border-[#E7C4D1] bg-[#FFF6F9] text-smoke',
+  },
+} as const;
 
 function getReachForScore(wine: Wine) {
   const drinkability = getDrinkabilityInfo(wine);
@@ -51,9 +83,18 @@ function getTopRightNowScore(wine: Wine) {
   return score;
 }
 
-function PriorityWine({ wine, onSelectWine }: { wine: Wine; onSelectWine: (wine: Wine) => void }) {
+function PriorityWine({
+  wine,
+  onSelectWine,
+  tone,
+}: {
+  wine: Wine;
+  onSelectWine: (wine: Wine) => void;
+  tone: PriorityGroup['tone'];
+}) {
   const profile = mapWineToProfile(wine);
   const drinkStatus = getDrinkabilityInfo(wine).status;
+  const toneClasses = priorityToneClasses[tone];
   const summaryContext =
     drinkStatus === 'Peak window'
       ? 'peak'
@@ -64,37 +105,43 @@ function PriorityWine({ wine, onSelectWine }: { wine: Wine; onSelectWine: (wine:
           : drinkStatus === 'Past peak'
             ? 'past_peak'
             : 'general';
+  const compactChips = getProfileSupportChips(profile, 2);
+  const shortSummary = getProfileContextSummary(profile, summaryContext)
+    .replace(/\s+/g, ' ')
+    .split('. ')
+    .filter(Boolean)[0]
+    ?.trim()
+    .replace(/\.$/, '');
 
   return (
     <button
-      className="interactive-surface w-full rounded-lg border border-ink/10 bg-white p-4 text-left shadow-sm hover:-translate-y-0.5 hover:border-vine/30 hover:bg-porcelain/80 hover:shadow-lift"
+      className={`interactive-surface w-full rounded-lg border p-3 text-left shadow-sm hover:-translate-y-0.5 hover:shadow-lift ${toneClasses.card}`}
       type="button"
       onClick={() => onSelectWine(wine)}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="font-serif text-lg font-bold leading-tight text-ink">{wine.name}</p>
-          <p className="mt-1 text-sm text-smoke">
-            {wine.producer} - {wine.vintage}
+      <div className="flex items-start justify-between gap-2.5">
+        <div className="min-w-0">
+          <p className="line-clamp-2 font-serif text-base font-bold leading-tight text-ink">{wine.name}</p>
+          <p className="mt-1 truncate text-xs text-smoke">
+            {[wine.producer, wine.vintage].filter(Boolean).join(' · ') || wine.region || 'Cellar pick'}
           </p>
         </div>
         <DrinkStatusBadge wine={wine} compact />
       </div>
-      <DrinkStatusBadge wine={wine} showTimeline />
-      <p className="mt-3 text-sm leading-6 text-smoke">
-        {getProfileContextSummary(profile, summaryContext)}
+      <p className="mt-2 text-xs leading-5 text-smoke">
+        {shortSummary ? `${shortSummary}.` : 'Worth a closer look right now.'}
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {getProfileSupportChips(profile).map((chip) => (
-          <span key={chip} className="rounded-md bg-paper px-2.5 py-1 text-[11px] font-semibold text-smoke shadow-sm">
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {compactChips.map((chip) => (
+          <span key={chip} className={`rounded-md px-2 py-1 text-[10px] font-semibold shadow-sm ${toneClasses.chip}`}>
             {chip}
           </span>
         ))}
       </div>
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold uppercase tracking-wide text-smoke">
+      <div className="mt-2.5 flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-smoke/85">
         <span>{wine.quantity} bottle{wine.quantity === 1 ? '' : 's'}</span>
-        <span>Best by {wine.bestDrinkBy}</span>
-        <span>{formatCurrency(wine.marketValue)}</span>
+        {wine.bestDrinkBy ? <span>Best by {wine.bestDrinkBy}</span> : null}
+        {wine.marketValue ? <span>{formatCurrency(wine.marketValue)}</span> : null}
       </div>
     </button>
   );
@@ -122,24 +169,28 @@ export default function CellarPriorities({ wines, onSelectWine }: CellarPrioriti
       subtitle: 'Bottles already in a lovely place.',
       wines: readyNow,
       emptyMessage: 'Nothing especially ready at this moment, which simply means the cellar still has a little patience.',
+      tone: 'moss',
     },
     {
       title: 'Drink soon',
       subtitle: 'Worth opening before the window starts to narrow.',
       wines: drinkSoon,
       emptyMessage: 'Nothing is really nudging you right now. The cellar can rest for a bit.',
+      tone: 'gold',
     },
     {
       title: 'The First Ones I’d Reach For',
       subtitle: 'Bottles worth opening before the moment passes.',
       wines: firstReachFor,
       emptyMessage: 'Nothing is really stepping forward just now. That is a very calm cellar problem to have.',
+      tone: 'plum',
     },
     {
       title: 'Top Bottles Right Now',
       subtitle: 'The standouts currently drinking beautifully.',
       wines: topRightNow,
       emptyMessage: 'No obvious star tonight. A few bottles are lovely, but none are especially stealing the spotlight.',
+      tone: 'lavender',
     },
   ];
 
@@ -159,13 +210,15 @@ export default function CellarPriorities({ wines, onSelectWine }: CellarPrioriti
       <div className="grid gap-5 p-5 lg:grid-cols-4">
         {priorityGroups.map((group) => (
           <div key={group.title}>
-            <h3 className="text-sm font-extrabold uppercase tracking-wide text-vine">{group.title}</h3>
-            <p className="mt-1 text-xs leading-5 text-smoke">{group.subtitle}</p>
+            <h3 className={`text-sm font-extrabold uppercase tracking-wide ${priorityToneClasses[group.tone].heading}`}>{group.title}</h3>
+            <p className={`mt-1 text-xs leading-5 ${priorityToneClasses[group.tone].subtitle}`}>{group.subtitle}</p>
             <div className="mt-3 space-y-3">
               {group.wines.length ? (
-                group.wines.slice(0, 3).map((wine) => <PriorityWine key={wine.id} wine={wine} onSelectWine={onSelectWine} />)
+                group.wines.slice(0, 2).map((wine) => (
+                  <PriorityWine key={wine.id} wine={wine} tone={group.tone} onSelectWine={onSelectWine} />
+                ))
               ) : (
-                <div className="rounded-lg border border-dashed border-ink/20 p-4 text-sm leading-6 text-smoke">
+                <div className={`rounded-lg border border-dashed p-4 text-sm leading-6 ${priorityToneClasses[group.tone].empty}`}>
                   {group.emptyMessage}
                 </div>
               )}

@@ -1,5 +1,5 @@
 import { User } from '@supabase/supabase-js';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import AppShell from './components/AppShell';
 import AuthScreen, { AuthMode } from './components/AuthScreen';
 import CellarPriorities from './components/CellarPriorities';
@@ -181,6 +181,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
   const [editingWine, setEditingWine] = useState<Wine | undefined>();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Wine | null>(null);
+  const [isWineFactOpen, setIsWineFactOpen] = useState(true);
   const [naturalSearch, setNaturalSearch] = useState<{
     query: string;
     matches: NaturalLanguageSearchMatch[];
@@ -207,6 +208,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
   const cellarLabel = useMemo(() => getUserCellarLabel(user), [user]);
   const isSearchingByText = searchQuery.length > 0;
   const selectedWine = wines.find((wine) => wine.id === selectedWineId) ?? null;
+  const wineFactBubbleRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const query = filters.query.trim();
@@ -240,6 +242,34 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
       window.clearTimeout(timeout);
     };
   }, [accessToken, filters.query, wines.length]);
+
+  useEffect(() => {
+    setIsWineFactOpen(true);
+  }, [dailyWineFact]);
+
+  useEffect(() => {
+    if (!isWineFactOpen) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (wineFactBubbleRef.current?.contains(target)) return;
+
+      setIsWineFactOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+    };
+  }, [isWineFactOpen]);
+
+  const dismissWineFact = () => {
+    setIsWineFactOpen(false);
+  };
 
   const upsertWine = async (wine: Wine) => {
     const saved = await saveWine(wine);
@@ -286,48 +316,69 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
       onSignOut={() => void authService.signOut()}
     >
       <main className={`mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8 ${hasLocalImport ? 'pb-44 sm:pb-48 lg:pb-28' : ''}`}>
-        <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 xl:min-h-[430px] xl:grid-cols-[minmax(0,1fr)_336px] xl:items-center xl:gap-10">
-          <div className="min-w-0 xl:mx-auto xl:flex xl:min-h-[360px] xl:w-full xl:max-w-[860px] xl:flex-col xl:justify-center">
-            <div className="xl:mx-auto xl:max-w-[780px] xl:text-center">
-              <p className="section-kicker xl:text-center">{cellarLabel}</p>
-              <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight xl:mx-auto xl:max-w-none">
-                Everything you love about your wines.
-              </h1>
-              <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-ink sm:mt-5 sm:text-lg sm:leading-8 xl:mx-auto">
-                All in one place—even the little details you forget.
-              </p>
-              <div className={`hero-cellar-note hero-cellar-note--${dailyWineFact.tone} mt-4 max-w-xl xl:mx-auto`}>
-                <div className="flex items-start justify-between gap-3 xl:items-center">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-plum/75 xl:text-left">Today&apos;s wine fact</p>
-                  <span className="hero-cellar-note-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" className="hero-cellar-note-sparkle" fill="none">
-                      <path
-                        d="M12 3.5L13.9 10.1L20.5 12L13.9 13.9L12 20.5L10.1 13.9L3.5 12L10.1 10.1L12 3.5Z"
-                        fill="currentColor"
-                      />
-                      <circle cx="12" cy="12" r="1.2" fill="rgba(255,255,255,0.72)" />
-                    </svg>
-                  </span>
+        <div className="relative">
+          {isWineFactOpen ? (
+            <div
+              ref={wineFactBubbleRef}
+              className="mb-4 xl:absolute xl:left-0 xl:top-0 xl:z-10 xl:mb-0 xl:w-full xl:max-w-[27rem] xl:-translate-x-40 xl:-translate-y-5"
+            >
+              <div
+                className={`hero-cellar-note hero-cellar-note--${dailyWineFact.tone} hero-cellar-note-bubble`}
+                role="dialog"
+                aria-label="Today&apos;s wine fact"
+              >
+                <span className="hero-cellar-note-trail" aria-hidden="true">
+                  <span className="hero-cellar-note-trail-dot hero-cellar-note-trail-dot--lg" />
+                  <span className="hero-cellar-note-trail-dot hero-cellar-note-trail-dot--sm" />
+                </span>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-plum/75 xl:text-left">Today&apos;s wine fact</p>
+                    <p className="mt-2 text-sm font-bold uppercase tracking-[0.14em] text-smoke/80 xl:text-left">
+                      {dailyWineFact.title}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="hero-cellar-note-dismiss"
+                      onClick={dismissWineFact}
+                      aria-label="Dismiss today&apos;s wine fact"
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm font-bold uppercase tracking-[0.14em] text-smoke/80 xl:text-center">
-                  {dailyWineFact.title}
-                </p>
-                <p className="mt-2 font-serif text-lg leading-7 text-ink/85 sm:text-[1.35rem] sm:leading-8 xl:text-center">
+                <p className="mt-2 font-serif text-lg leading-7 text-ink/85 sm:text-[1.35rem] sm:leading-8 xl:text-left">
                   {dailyWineFact.body}
                 </p>
               </div>
             </div>
-            <div className="mt-4 grid gap-4 sm:mt-5 xl:w-full xl:max-w-[820px]">
-              <CellarStats wines={wines} />
-              <div className="xl:hidden">
-                <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+          ) : null}
+
+          <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 xl:min-h-[430px] xl:grid-cols-[minmax(0,1fr)_336px] xl:items-center xl:gap-10">
+            <div className="min-w-0 xl:mx-auto xl:flex xl:min-h-[360px] xl:w-full xl:max-w-[860px] xl:flex-col xl:justify-center">
+              <div className="xl:mx-auto xl:max-w-[780px] xl:text-center">
+                <p className="section-kicker xl:text-center">{cellarLabel}</p>
+                <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight xl:mx-auto xl:max-w-none">
+                  Everything you love about your wines.
+                </h1>
+                <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-ink sm:mt-5 sm:text-lg sm:leading-8 xl:mx-auto">
+                  All in one place—even the little details you forget.
+                </p>
+              </div>
+              <div className="mt-4 grid gap-4 sm:mt-5 xl:w-full xl:max-w-[820px]">
+                <CellarStats wines={wines} />
+                <div className="xl:hidden">
+                  <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+                </div>
               </div>
             </div>
-          </div>
-          <div className="hidden xl:block xl:self-center xl:border-l xl:border-[#E7DCCB]/70 xl:pl-6">
-            <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
-          </div>
-        </section>
+            <div className="hidden xl:block xl:self-center xl:border-l xl:border-[#E7DCCB]/70 xl:pl-6">
+              <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
+            </div>
+          </section>
+        </div>
 
         <CellarToolbar
           query={filters.query}

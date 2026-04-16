@@ -274,15 +274,87 @@ select:focus-visible {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 8px 20px rgba(42, 31, 33, 0.035);
   }
 
-  .hero-cellar-note-icon {
-    @apply inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/55 bg-white/70 text-sm shadow-sm;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 6px 12px rgba(42, 31, 33, 0.04);
-    letter-spacing: 0;
+  .hero-cellar-note-bubble {
+    @apply mt-5 rounded-[28px] rounded-bl-[34px] rounded-tr-[24px] px-5 py-4;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.82),
+      0 16px 40px rgba(42, 31, 33, 0.08),
+      0 0 0 1px rgba(255, 255, 255, 0.18);
+    transition:
+      box-shadow 220ms ease,
+      transform 220ms ease,
+      filter 220ms ease;
+    animation:
+      hero-note-bubble-in 280ms cubic-bezier(0.22, 1, 0.36, 1),
+      hero-note-bubble-glow 3.6s ease-in-out infinite;
   }
 
-  .hero-cellar-note-sparkle {
-    @apply h-4 w-4;
-    filter: drop-shadow(0 0 6px currentColor);
+  .hero-cellar-note-bubble:hover {
+    transform: translateY(-4px) scale(1.012);
+    filter: saturate(1.08) brightness(1.02);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.88),
+      0 24px 44px rgba(109, 73, 116, 0.24),
+      0 0 0 1px rgba(255, 255, 255, 0.28),
+      0 0 0 2px rgba(191, 148, 74, 0.12),
+      0 0 34px rgba(191, 148, 74, 0.3),
+      0 0 70px rgba(123, 91, 134, 0.24);
+  }
+
+  .hero-cellar-note-bubble::after {
+    content: '';
+    @apply pointer-events-none absolute inset-0 rounded-[28px] rounded-bl-[34px] rounded-tr-[24px];
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+    opacity: 0.88;
+  }
+
+  .hero-cellar-note-bubble::before {
+    content: '';
+    @apply pointer-events-none absolute -left-3 -top-3 h-12 w-12 rounded-full;
+    background:
+      radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(245, 229, 187, 0.42) 42%, rgba(245, 229, 187, 0) 72%);
+    filter: blur(1px);
+    opacity: 0.9;
+  }
+
+  .hero-cellar-note-bubble:hover::after {
+    background:
+      linear-gradient(120deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 26%),
+      linear-gradient(135deg, rgba(191, 148, 74, 0.92), rgba(255, 240, 206, 0.82) 22%, rgba(123, 91, 134, 0.85) 52%, rgba(255, 240, 206, 0.8) 78%, rgba(191, 148, 74, 0.95));
+    background-size: 180% 180%;
+    animation: hero-note-border-glitter 1.9s linear infinite;
+    opacity: 1;
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+      0 0 0 1px rgba(255, 240, 206, 0.22);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 1.5px;
+  }
+
+  .hero-cellar-note-trail {
+    @apply pointer-events-none absolute -bottom-6 left-8 flex items-end gap-2;
+  }
+
+  .hero-cellar-note-trail-dot {
+    @apply block rounded-full border border-white/55 bg-white/70 shadow-sm backdrop-blur-sm;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 8px 18px rgba(42, 31, 33, 0.05);
+  }
+
+  .hero-cellar-note-trail-dot--lg {
+    @apply h-5 w-5;
+  }
+
+  .hero-cellar-note-trail-dot--sm {
+    @apply h-3 w-3;
+  }
+
+  .hero-cellar-note-dismiss {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/55 bg-white/65 text-lg leading-none text-smoke/80 transition hover:bg-white/90 hover:text-ink focus:outline-none focus:ring-2 focus:ring-plum/20;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 4px 10px rgba(42, 31, 33, 0.04);
   }
 
   .hero-cellar-note::before {
@@ -298,24 +370,12 @@ select:focus-visible {
     @apply bg-gradient-to-r from-gold/75 via-straw/50 to-transparent;
   }
 
-  .hero-cellar-note--gold .hero-cellar-note-icon {
-    background-color: rgba(255, 245, 220, 0.88);
-    color: #a06a1a;
-    text-shadow: 0 0 14px rgba(185, 142, 69, 0.18);
-  }
-
   .hero-cellar-note--lavender {
     @apply bg-[#FBF7FF]/78;
   }
 
   .hero-cellar-note--lavender::before {
     @apply bg-gradient-to-r from-lavender/80 via-plum/30 to-transparent;
-  }
-
-  .hero-cellar-note--lavender .hero-cellar-note-icon {
-    background-color: rgba(245, 238, 255, 0.88);
-    @apply text-plum;
-    text-shadow: 0 0 14px rgba(123, 91, 134, 0.16);
   }
 
   .hero-cellar-note--sage {
@@ -326,12 +386,6 @@ select:focus-visible {
     @apply bg-gradient-to-r from-[#9AAE8A] via-[#C8D3BE] to-transparent;
   }
 
-  .hero-cellar-note--sage .hero-cellar-note-icon {
-    background-color: rgba(238, 247, 234, 0.88);
-    color: #5f7551;
-    text-shadow: 0 0 14px rgba(95, 117, 81, 0.14);
-  }
-
   .hero-cellar-note--rose {
     @apply bg-[#FFF5F5]/80;
   }
@@ -340,17 +394,52 @@ select:focus-visible {
     @apply bg-gradient-to-r from-[#C47B89] via-[#E6C0C8] to-transparent;
   }
 
-  .hero-cellar-note--rose .hero-cellar-note-icon {
-    background-color: rgba(255, 240, 242, 0.88);
-    color: #a85b70;
-    text-shadow: 0 0 14px rgba(168, 91, 112, 0.15);
-  }
-
   @media (min-width: 1280px) {
-    .hero-cellar-note::after {
+    .hero-cellar-note:not(.hero-cellar-note-bubble)::after {
       content: '⟐';
       @apply pointer-events-none absolute -right-20 top-1/2 hidden -translate-y-1/2 text-7xl text-gold/10 xl:block;
       text-shadow: 0 0 26px rgba(185, 142, 69, 0.08);
+    }
+  }
+
+  @keyframes hero-note-bubble-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes hero-note-bubble-glow {
+    0%,
+    100% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.82),
+        0 16px 40px rgba(42, 31, 33, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.18),
+        0 0 0 rgba(185, 142, 69, 0);
+    }
+
+    50% {
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.82),
+        0 20px 42px rgba(42, 31, 33, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.2),
+        0 0 28px rgba(185, 142, 69, 0.12);
+    }
+  }
+
+  @keyframes hero-note-border-glitter {
+    0% {
+      background-position: 0% 50%, 0% 50%;
+    }
+
+    100% {
+      background-position: 120% 50%, 100% 50%;
     }
   }
 
