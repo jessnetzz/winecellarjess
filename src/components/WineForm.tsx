@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import BottleImage from './BottleImage';
 import { Wine, WineAutofillResult, WineFormData, WineStatus, WineStyle } from '../types/wine';
@@ -8,7 +8,7 @@ import { createId } from '../utils/id';
 interface WineFormProps {
   wine?: Wine;
   onCancel: () => void;
-  onSave: (wine: Wine) => void;
+  onSave: (wine: Wine) => Promise<void> | void;
 }
 
 const wineStyles: WineStyle[] = ['red', 'white', 'rose', 'sparkling', 'dessert', 'fortified', 'orange'];
@@ -48,6 +48,18 @@ function defaultFormData(): WineFormData {
 
 function numberValue(value: number | undefined): string | number {
   return value ?? '';
+}
+
+function buildStorageDisplayName(storageLocation: WineFormData['storageLocation']): string {
+  return [
+    storageLocation.fridge?.trim(),
+    storageLocation.rack?.trim() ? `Rack ${storageLocation.rack.trim()}` : '',
+    storageLocation.shelf?.trim() ? `Shelf ${storageLocation.shelf.trim()}` : '',
+    storageLocation.bin?.trim() ? `Bin ${storageLocation.bin.trim()}` : '',
+    storageLocation.box?.trim() ? `Box ${storageLocation.box.trim()}` : '',
+  ]
+    .filter(Boolean)
+    .join(' / ');
 }
 
 type NumericFormKey =
@@ -144,6 +156,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   const [autofillResult, setAutofillResult] = useState<WineAutofillResult | null>(null);
   const [autofillError, setAutofillError] = useState<string | null>(null);
   const [isAutofilling, setIsAutofilling] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [activeStep, setActiveStep] = useState<WineFormStep>('basic');
   const isEditing = Boolean(wine);
 
@@ -152,6 +165,21 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   const defaultData = useMemo(() => defaultFormData(), []);
   const activeStepIndex = wineFormSteps.findIndex((step) => step.id === activeStep);
   const isLastStep = activeStep === 'review';
+  const originalAutoStorageLabel = useMemo(
+    () => (wine ? buildStorageDisplayName(wine.storageLocation) : ''),
+    [wine],
+  );
+
+  useEffect(() => {
+    setForm(wine ? { ...wine } : defaultFormData());
+    setErrors([]);
+    setSuggestedFields(new Set());
+    setAutofillResult(null);
+    setAutofillError(null);
+    setIsAutofilling(false);
+    setIsSaving(false);
+    setActiveStep('basic');
+  }, [wine]);
 
   const goToStep = (direction: 1 | -1) => {
     const nextStep = wineFormSteps[Math.min(wineFormSteps.length - 1, Math.max(0, activeStepIndex + direction))];
@@ -179,6 +207,27 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
     }
     const parsed = Number(value);
     setForm((current) => ({ ...current, [key]: value === '' || Number.isNaN(parsed) ? undefined : parsed }) as WineFormData);
+  };
+
+  const updateStorageField = (key: keyof WineFormData['storageLocation'], value: string) => {
+    setForm((current) => {
+      const nextStorageLocation = {
+        ...current.storageLocation,
+        [key]: value,
+      };
+      const currentDisplayName = current.storageLocation.displayName.trim();
+      const currentAutoLabel = buildStorageDisplayName(current.storageLocation);
+      const nextAutoLabel = buildStorageDisplayName(nextStorageLocation);
+      const shouldRefreshDisplayName = !currentDisplayName || currentDisplayName === currentAutoLabel;
+
+      return {
+        ...current,
+        storageLocation: {
+          ...nextStorageLocation,
+          displayName: shouldRefreshDisplayName ? nextAutoLabel : current.storageLocation.displayName,
+        },
+      };
+    });
   };
 
   const suggestedClass = (key: SuggestedFormKey) =>
@@ -268,7 +317,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
     }
   };
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
 
     const validationErrors: string[] = [];
@@ -292,6 +341,14 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
     }
 
     const timestamp = new Date().toISOString();
+    const autoStorageLabel = buildStorageDisplayName(form.storageLocation);
+    const trimmedDisplayName = form.storageLocation.displayName.trim();
+    const shouldRefreshDisplayName =
+      !trimmedDisplayName ||
+      (Boolean(autoStorageLabel) &&
+        isEditing &&
+        trimmedDisplayName === (wine?.storageLocation.displayName.trim() ?? '') &&
+        trimmedDisplayName === originalAutoStorageLabel);
     const savedWine: Wine = {
       ...form,
       id: wine?.id ?? createId('wine'),
@@ -311,17 +368,24 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
       storageLocation: {
         ...form.storageLocation,
         displayName:
-          form.storageLocation.displayName.trim() ||
-          [form.storageLocation.fridge, form.storageLocation.rack && `Rack ${form.storageLocation.rack}`, form.storageLocation.shelf && `Shelf ${form.storageLocation.shelf}`, form.storageLocation.bin && `Bin ${form.storageLocation.bin}`, form.storageLocation.box && `Box ${form.storageLocation.box}`]
-            .filter(Boolean)
-            .join(' / ') ||
+          (shouldRefreshDisplayName ? autoStorageLabel : trimmedDisplayName) ||
+          autoStorageLabel ||
           'Unassigned',
       },
       createdAt: wine?.createdAt ?? timestamp,
       updatedAt: timestamp,
     };
 
-    onSave(savedWine);
+    setErrors([]);
+    setIsSaving(true);
+
+    try {
+      await onSave(savedWine);
+    } catch (caught) {
+      setErrors([caught instanceof Error ? caught.message : 'We could not save this bottle just yet. Please try again.']);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -406,7 +470,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
                 className="premium-button min-h-12 shrink-0 lg:min-h-0"
                 type="button"
                 onClick={() => void runAutofill()}
-                disabled={!canAutofill || isAutofilling}
+                disabled={!canAutofill || isAutofilling || isSaving}
               >
                 {isAutofilling ? 'Generating details...' : 'Autofill with AI'}
               </button>
@@ -534,12 +598,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
                 <input
                   className="field mt-2"
                   value={form.storageLocation[key] ?? ''}
-                  onChange={(event) =>
-                    update('storageLocation', {
-                      ...form.storageLocation,
-                      [key]: event.target.value,
-                    })
-                  }
+                  onChange={(event) => updateStorageField(key, event.target.value)}
                 />
               </label>
             ))}
@@ -650,8 +709,8 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
           <button className="secondary-button" type="button" onClick={onCancel}>
             Cancel
           </button>
-          <button className="premium-button" type="submit">
-            {isEditing ? 'Save changes' : 'Add wine'}
+          <button className="premium-button" type="submit" disabled={isSaving}>
+            {isSaving ? 'Saving...' : isEditing ? 'Save changes' : 'Add wine'}
           </button>
         </div>
 
@@ -660,12 +719,12 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
             <button className="secondary-button" type="button" onClick={() => goToStep(-1)} disabled={activeStepIndex === 0}>
               Back
             </button>
-            <button className="premium-button" type="submit">
-              {isEditing ? 'Save' : 'Save wine'}
+            <button className="premium-button" type="submit" disabled={isSaving}>
+              {isSaving ? 'Saving...' : isEditing ? 'Save' : 'Save wine'}
             </button>
           </div>
           {!isLastStep ? (
-            <button className="secondary-button bg-white" type="button" onClick={() => goToStep(1)}>
+            <button className="secondary-button bg-white" type="button" onClick={() => goToStep(1)} disabled={isSaving}>
               Next: {wineFormSteps[activeStepIndex + 1]?.label}
             </button>
           ) : null}
@@ -673,7 +732,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
             className="secondary-button border-lavender/30 bg-white"
             type="button"
             onClick={() => void runAutofill()}
-            disabled={!canAutofill || isAutofilling}
+            disabled={!canAutofill || isAutofilling || isSaving}
           >
             {isAutofilling ? 'Autofilling...' : 'Autofill with AI'}
           </button>

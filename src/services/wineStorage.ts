@@ -217,13 +217,14 @@ export const wineRepository = {
         .eq('id', wine.id)
         .eq('user_id', userId)
         .select('id')
-        .single();
+        .maybeSingle();
 
       if (!error && data?.id) {
         return getWineById(userId, data.id);
       }
 
       if (error) throw error;
+      throw new Error('We could not update that bottle. Please refresh and try again.');
     }
 
     const { data, error } = await client
