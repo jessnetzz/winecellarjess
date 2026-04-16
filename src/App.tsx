@@ -293,7 +293,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
               <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight xl:mx-auto xl:max-w-none">
                 Everything you love about your wines.
               </h1>
-              <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-smoke sm:mt-5 sm:text-lg sm:leading-8 xl:mx-auto">
+              <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-ink sm:mt-5 sm:text-lg sm:leading-8 xl:mx-auto">
                 All in one place—even the little details you forget.
               </p>
               <div className={`hero-cellar-note hero-cellar-note--${dailyWineFact.tone} mt-4 max-w-xl xl:mx-auto`}>
