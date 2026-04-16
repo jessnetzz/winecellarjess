@@ -16,7 +16,7 @@ export type SommelierQueryType =
 
 export type PairingMode = 'bridge' | 'contrast' | 'echo' | 'timing';
 export type SommelierToneMode = 'refined' | 'warm' | 'playful';
-export type SommelierContext = 'search' | 'tonight' | 'generic';
+export type SommelierContext = 'search' | 'today' | 'tonight' | 'generic';
 
 export interface DishProfile {
   label: string;
@@ -271,6 +271,7 @@ function determinePairingMode(intent: SommelierQueryType, principle: PairingPrin
 function getQueryLabel(query = '', weatherContext?: WeatherRecommendationContext | null, context: SommelierContext = 'search') {
   if (query.trim()) return query.trim();
   if (context === 'tonight') return 'tonight';
+  if (context === 'today') return 'today';
   if (weatherContext) return weatherContext.mood;
   return 'this bottle';
 }
@@ -475,6 +476,14 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
       };
     }
 
+    if (context === 'today') {
+      return {
+        heading: 'Why today',
+        body: `This ${style} brings ${region ? `${region} character, ` : ''}${wineProfile.texture}, ${wineProfile.fruitProfile} fruit, and the kind of ${wineProfile.finish} that suits the day ahead.${wink ? ` ${wink}` : ''}`,
+        reasoning,
+      };
+    }
+
     return {
       heading: 'Why it fits the mood',
       body: `Mood matters: cozy searches usually want texture, darker fruit, or a little savory depth, while warmer moods want lift and freshness. This ${style} brings ${region ? `${region} character, ` : ''}${wineProfile.texture}, ${wineProfile.fruitProfile} fruit, and it is ${readiness}.${wink ? ` ${wink}` : ''}`,
@@ -484,7 +493,7 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
 
   if (intent === 'drink-now') {
     return {
-      heading: context === 'tonight' ? 'Why tonight' : 'Why it is ready',
+      heading: context === 'tonight' ? 'Why tonight' : context === 'today' ? 'Why today' : 'Why it is ready',
       body: `The strongest signal here is timing. This bottle is ${readiness}, so the ${wineProfile.fruitProfile} fruit, ${wineProfile.tannin}, and ${wineProfile.finish} are more likely to feel integrated now rather than awkwardly young or tired.${wink ? ` ${wink}` : ''}`,
       reasoning,
     };
@@ -507,6 +516,14 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
       };
     }
 
+    if (context === 'today') {
+      return {
+        heading: 'Why today',
+        body: `This ${style} works today because it has enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to feel right with the weather and the general mood of the day. The style has a clear lane at the table without feeling heavy or fussy.`,
+        reasoning,
+      };
+    }
+
     return {
       heading: 'Why it works',
       body: `This ${style} is a strong pick because it is ${readiness} and has enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to make sense with food. The pairing notes give it a clear lane at the table without overcomplicating the bottle.`,
@@ -523,9 +540,11 @@ export function composeSommelierRecommendation(reasoning: SommelierReasoning, wi
   }
 
   return {
-    heading: context === 'tonight' ? 'Why tonight' : 'Why it works',
+    heading: context === 'tonight' ? 'Why tonight' : context === 'today' ? 'Why today' : 'Why it works',
     body: context === 'tonight'
       ? `This ${style} feels like the right lead because the weather and overall mood suit its ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture}.`
+      : context === 'today'
+        ? `This ${style} feels like the right lead because the weather and overall rhythm of the day suit its ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture}.`
       : `This ${style} feels like the right lead because it is ${readiness}, with enough ${wineProfile.body}, ${wineProfile.acidity}, and ${wineProfile.texture} to make the recommendation feel grounded even without a long tasting history.`,
     reasoning,
   };

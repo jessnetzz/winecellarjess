@@ -14,6 +14,8 @@ export interface WeatherRecommendationContext {
   feelsLikeF?: number;
 }
 
+export type BottleMomentContext = 'today' | 'tonight';
+
 export interface RecommendationScoreBreakdown {
   readiness: number;
   rating: number;
@@ -131,7 +133,7 @@ export function scoreTonightsBottle(wine: Wine, weatherContext: WeatherRecommend
   return getRecommendationScoreBreakdown(wine, weatherContext).total;
 }
 
-export function getWeatherContextLabel(context: WeatherRecommendationContext | null) {
+export function getWeatherContextLabel(context: WeatherRecommendationContext | null, moment: BottleMomentContext = 'tonight') {
   if (!context) return null;
 
   const temperatureLabel =
@@ -141,7 +143,15 @@ export function getWeatherContextLabel(context: WeatherRecommendationContext | n
   const conditionLabel = CONDITION_LABELS[context.condition].label;
   const temperatureLabelPrefix = TEMPERATURE_LABELS[context.temperatureBand].label;
 
-  return `${context.condition === 'neutral' ? temperatureLabelPrefix : conditionLabel} · ${temperatureLabel}`;
+  const rawLabel = context.condition === 'neutral' ? temperatureLabelPrefix : conditionLabel;
+  const adjustedLabel = moment === 'today'
+    ? rawLabel
+        .replace(/night/gi, 'day')
+        .replace(/evening/gi, 'daytime')
+        .replace(/tonight/gi, 'today')
+    : rawLabel;
+
+  return `${adjustedLabel} · ${temperatureLabel}`;
 }
 
 export function getWeatherAwareRecommendation(wine: Wine, weatherContext: WeatherRecommendationContext | null) {

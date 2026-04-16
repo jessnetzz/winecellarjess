@@ -6,6 +6,7 @@ import { buildSommelierRecommendation } from '../services/sommelierReasoningEngi
 import { Wine } from '../types/wine';
 import { isDrinkableNow } from '../utils/drinkWindow';
 import {
+  BottleMomentContext,
   getRecommendationScoreBreakdown,
   getWeatherContextLabel,
   getWeatherRecommendationContext,
@@ -24,6 +25,10 @@ function getBottleMomentLabel(date = new Date()) {
 
 function getBottleMomentIcon(label: string) {
   return label === 'Today’s Bottle' ? '☀️' : '🌙';
+}
+
+function getBottleMomentContext(label: string): BottleMomentContext {
+  return label === 'Today’s Bottle' ? 'today' : 'tonight';
 }
 
 function buildCardNoteSummary(body?: string) {
@@ -49,6 +54,7 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
   const [weather, setWeather] = useState<LocalWeather | null>(null);
   const [weatherAttempted, setWeatherAttempted] = useState(false);
   const [bottleMomentLabel, setBottleMomentLabel] = useState(() => getBottleMomentLabel());
+  const bottleMomentContext = useMemo(() => getBottleMomentContext(bottleMomentLabel), [bottleMomentLabel]);
   const weatherContext = useMemo(() => getWeatherRecommendationContext(weather), [weather]);
   const candidates = useMemo(
     () =>
@@ -62,7 +68,7 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
     [wines, weatherContext],
   );
   const wine = candidates.length ? candidates[offset % candidates.length] : undefined;
-  const weatherContextLabel = getWeatherContextLabel(weatherContext);
+  const weatherContextLabel = getWeatherContextLabel(weatherContext, bottleMomentContext);
   const profile = wine ? mapWineToProfile(wine) : null;
   const scoreBreakdown = wine ? getRecommendationScoreBreakdown(wine, weatherContext) : null;
   const tonightChips = Array.from(
@@ -73,12 +79,12 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
       wine
         ? buildSommelierRecommendation({
             wine,
-            context: 'tonight',
+            context: bottleMomentContext,
             query: '',
             weatherContext,
           })
         : null,
-    [wine, weatherContext],
+    [wine, weatherContext, bottleMomentContext],
   );
   const cardNoteSummary = useMemo(
     () => buildCardNoteSummary(tonightRecommendation?.body),
@@ -119,7 +125,9 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
     return (
       <section className="tonights-bottle-card" aria-labelledby="tonights-bottle-heading">
         <p id="tonights-bottle-heading" className="section-kicker">{bottleMomentLabel}</p>
-        <p className="mt-3 font-serif text-2xl font-bold text-ink">Nothing is calling perfectly tonight.</p>
+        <p className="mt-3 font-serif text-2xl font-bold text-ink">
+          {bottleMomentContext === 'today' ? 'Nothing is calling perfectly today.' : 'Nothing is calling perfectly tonight.'}
+        </p>
         <p className="mt-3 text-sm leading-6 text-smoke">
           Maybe browse your cellar and choose something special.
         </p>
@@ -142,7 +150,9 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
             </p>
           ) : null}
           {!weatherContext && !weatherAttempted ? (
-            <p className="mt-3 text-xs font-semibold text-smoke/80">Checking tonight’s weather...</p>
+            <p className="mt-3 text-xs font-semibold text-smoke/80">
+              {bottleMomentContext === 'today' ? 'Checking today’s weather...' : 'Checking tonight’s weather...'}
+            </p>
           ) : null}
           <h2 className="mx-auto mt-4 max-w-[15ch] font-liam text-[1.32rem] font-normal leading-[1.12] text-ink sm:text-[1.48rem]">
             {wine.vintage} {wine.name}
@@ -154,7 +164,9 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
         <div className="flex justify-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-gold/18 bg-white/78 px-3 py-1.5 shadow-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
-            <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#7B5A22]">{tonightRecommendation?.heading ?? 'Why tonight'}</p>
+            <p className="text-[12px] font-bold uppercase tracking-[0.16em] text-[#7B5A22]">
+              {tonightRecommendation?.heading ?? (bottleMomentContext === 'today' ? 'Why today' : 'Why tonight')}
+            </p>
           </div>
         </div>
         <p className="mt-3 text-center text-sm leading-6 text-ink/90">
