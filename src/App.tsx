@@ -431,10 +431,14 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                 <>
                   <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <p className="section-kicker">Collection</p>
-                      <h2 className="mt-2 font-serif text-3xl font-bold text-ink">
-                        {filteredWines.length} wine{filteredWines.length === 1 ? '' : 's'} in view
+                      <h2 className="flex items-center gap-3 font-liam text-[2.15rem] font-normal leading-none text-ink sm:text-[2.45rem]">
+                        <span className="text-base text-gold/65" aria-hidden="true">✦</span>
+                        <span>Collection</span>
+                        <span className="text-base text-gold/65" aria-hidden="true">✦</span>
                       </h2>
+                      <p className="mt-2 font-serif text-xl font-bold text-ink sm:text-2xl">
+                        {filteredWines.length} wine{filteredWines.length === 1 ? '' : 's'} in view
+                      </p>
                     </div>
                     <p className="text-sm text-smoke">
                       Sorted by {sort.key} {sort.direction === 'asc' ? 'ascending' : 'descending'}
