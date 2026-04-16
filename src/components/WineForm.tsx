@@ -157,6 +157,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   const [autofillError, setAutofillError] = useState<string | null>(null);
   const [isAutofilling, setIsAutofilling] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasManualStorageLabel, setHasManualStorageLabel] = useState(false);
   const [activeStep, setActiveStep] = useState<WineFormStep>('basic');
   const isEditing = Boolean(wine);
 
@@ -165,11 +166,6 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
   const defaultData = useMemo(() => defaultFormData(), []);
   const activeStepIndex = wineFormSteps.findIndex((step) => step.id === activeStep);
   const isLastStep = activeStep === 'review';
-  const originalAutoStorageLabel = useMemo(
-    () => (wine ? buildStorageDisplayName(wine.storageLocation) : ''),
-    [wine],
-  );
-
   useEffect(() => {
     setForm(wine ? { ...wine } : defaultFormData());
     setErrors([]);
@@ -178,6 +174,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
     setAutofillError(null);
     setIsAutofilling(false);
     setIsSaving(false);
+    setHasManualStorageLabel(false);
     setActiveStep('basic');
   }, [wine]);
 
@@ -216,9 +213,8 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
         [key]: value,
       };
       const currentDisplayName = current.storageLocation.displayName.trim();
-      const currentAutoLabel = buildStorageDisplayName(current.storageLocation);
       const nextAutoLabel = buildStorageDisplayName(nextStorageLocation);
-      const shouldRefreshDisplayName = !currentDisplayName || currentDisplayName === currentAutoLabel;
+      const shouldRefreshDisplayName = !hasManualStorageLabel || !currentDisplayName;
 
       return {
         ...current,
@@ -343,12 +339,6 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
     const timestamp = new Date().toISOString();
     const autoStorageLabel = buildStorageDisplayName(form.storageLocation);
     const trimmedDisplayName = form.storageLocation.displayName.trim();
-    const shouldRefreshDisplayName =
-      !trimmedDisplayName ||
-      (Boolean(autoStorageLabel) &&
-        isEditing &&
-        trimmedDisplayName === (wine?.storageLocation.displayName.trim() ?? '') &&
-        trimmedDisplayName === originalAutoStorageLabel);
     const savedWine: Wine = {
       ...form,
       id: wine?.id ?? createId('wine'),
@@ -368,7 +358,7 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
       storageLocation: {
         ...form.storageLocation,
         displayName:
-          (shouldRefreshDisplayName ? autoStorageLabel : trimmedDisplayName) ||
+          (!hasManualStorageLabel ? autoStorageLabel : trimmedDisplayName) ||
           autoStorageLabel ||
           'Unassigned',
       },
@@ -608,7 +598,10 @@ export default function WineForm({ wine, onCancel, onSave }: WineFormProps) {
                 className="field mt-2"
                 placeholder="Rack A / Shelf 3 / Bin 07"
                 value={form.storageLocation.displayName}
-                onChange={(event) => update('storageLocation', { ...form.storageLocation, displayName: event.target.value })}
+                onChange={(event) => {
+                  setHasManualStorageLabel(true);
+                  update('storageLocation', { ...form.storageLocation, displayName: event.target.value });
+                }}
               />
             </label>
           </div>
