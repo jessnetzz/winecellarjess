@@ -1,5 +1,5 @@
-import { Wine } from '../types/wine';
-import { getDrinkabilityInfo } from '../utils/drinkWindow';
+import type { Wine } from '../types/wine.js';
+import { getDrinkabilityInfo } from '../utils/drinkWindow.js';
 
 export type WineStyleFamily =
   | 'bold_red'

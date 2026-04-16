@@ -1,7 +1,7 @@
-import { mapQueryToFoodProfile } from '../src/services/foodAttributeMapper';
-import { getFoodAndWineMatchReason, getProfileSearchBoost, getWineProfileTags, hasMeaningfulFoodSignal } from '../src/services/wineProfileSelectors';
-import { mapWineToProfile } from '../src/services/wineAttributeMapper';
-import type { Wine, WineStyle, WineStatus } from '../src/types/wine';
+import { mapQueryToFoodProfile } from '../src/services/foodAttributeMapper.js';
+import { getFoodAndWineMatchReason, getProfileSearchBoost, getWineProfileTags, hasMeaningfulFoodSignal } from '../src/services/wineProfileSelectors.js';
+import { mapWineToProfile } from '../src/services/wineAttributeMapper.js';
+import type { Wine, WineStyle, WineStatus } from '../src/types/wine.js';
 
 export interface SearchWineRequest {
   query: string;

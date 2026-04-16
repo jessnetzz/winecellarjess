@@ -1,4 +1,4 @@
-import { DrinkabilityStatus, Wine } from '../types/wine';
+import type { DrinkabilityStatus, Wine } from '../types/wine.js';
 
 export interface DrinkabilityInfo {
   status: DrinkabilityStatus;

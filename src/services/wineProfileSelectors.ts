@@ -1,5 +1,5 @@
-import { FoodProfile, dishCanHandleTannin, dishIsComfortFood, dishIsPatioFriendly, dishWantsAcidity, dishWantsBubbles, mapQueryToFoodProfile } from './foodAttributeMapper';
-import { WineFlavorFamily, WinePairingTendency, WineProfile, WineReadinessTag, WineStyleFamily, WineTextureTrait } from './wineAttributeMapper';
+import { FoodProfile, dishCanHandleTannin, dishIsComfortFood, dishIsPatioFriendly, dishWantsAcidity, dishWantsBubbles, mapQueryToFoodProfile } from './foodAttributeMapper.js';
+import { WineFlavorFamily, WinePairingTendency, WineProfile, WineReadinessTag, WineStyleFamily, WineTextureTrait } from './wineAttributeMapper.js';
 
 export type ProfileTemperatureBand = 'cold' | 'cool' | 'mild' | 'warm' | 'hot';
 export type ProfileWeatherCondition = 'rainy' | 'clear' | 'cloudy' | 'windy' | 'snow' | 'neutral';
