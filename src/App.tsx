@@ -135,21 +135,21 @@ function LocalImportBanner({
   isBusy: boolean;
 }) {
   return (
-    <section className="rounded-lg border border-gold/40 bg-gold/10 p-5 shadow-subtle">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <section className="fixed inset-x-4 bottom-24 z-30 mx-auto w-auto max-w-[28rem] rounded-lg border border-gold/35 bg-porcelain/95 p-4 shadow-cellar backdrop-blur-xl sm:bottom-24 sm:max-w-[34rem] sm:p-5 lg:bottom-6 lg:right-6 lg:left-auto lg:mx-0 lg:max-w-[32rem]">
+      <div className="flex flex-col gap-4">
         <div>
           <p className="field-label text-[#7B5A22]">Local data found</p>
-          <h2 className="mt-2 font-serif text-2xl font-bold text-ink">Import your browser cellar into Supabase</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-smoke">
-            This is a one-time migration from the old localStorage data. After import, Supabase becomes the source of truth.
+          <h2 className="mt-2 font-serif text-[1.6rem] font-bold leading-tight text-ink">Bring your cellar with you</h2>
+          <p className="mt-2 text-sm leading-6 text-smoke">
+            We found wines saved on this device. Import them once to sync your collection securely across devices.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <button className="premium-button" type="button" onClick={onImport} disabled={isBusy}>
-            {isBusy ? 'Importing...' : 'Import my local data'}
+            {isBusy ? 'Importing...' : 'Import my cellar'}
           </button>
-          <button className="ghost-button" type="button" onClick={onDismiss} disabled={isBusy}>
-            Not now
+          <button className="secondary-button justify-center bg-white/70" type="button" onClick={onDismiss} disabled={isBusy}>
+            Later
           </button>
         </div>
       </div>
@@ -285,7 +285,7 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
       onCreateWine={openCreate}
       onSignOut={() => void authService.signOut()}
     >
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
+      <main className={`mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8 ${hasLocalImport ? 'pb-44 sm:pb-48 lg:pb-28' : ''}`}>
         <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 xl:min-h-[430px] xl:grid-cols-[minmax(0,1fr)_336px] xl:items-center xl:gap-10">
           <div className="min-w-0 xl:flex xl:min-h-[360px] xl:max-w-[860px] xl:flex-col xl:justify-center">
             <div className="xl:max-w-[700px]">
@@ -357,10 +357,6 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
           onRefresh={() => void reload()}
           onToggleView={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
         />
-
-        {hasLocalImport ? (
-          <LocalImportBanner onImport={() => void importLocalWines()} onDismiss={dismissLocalImport} isBusy={isMutating} />
-        ) : null}
 
         {error ? (
           <section className="rounded-lg border border-clay/30 bg-clay/10 p-5 text-sm leading-6 text-clay">
@@ -480,6 +476,10 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
           />
         </section>
       </main>
+
+      {hasLocalImport ? (
+        <LocalImportBanner onImport={() => void importLocalWines()} onDismiss={dismissLocalImport} isBusy={isMutating} />
+      ) : null}
 
       <Modal
         title={editingWine ? 'Edit wine' : 'Add wine'}
