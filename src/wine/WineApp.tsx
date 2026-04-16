@@ -4,6 +4,7 @@ import AppShell from '../components/AppShell';
 import AuthScreen, { AuthMode } from '../components/AuthScreen';
 import CellarPriorities from '../components/CellarPriorities';
 import CellarToolbar from '../components/CellarToolbar';
+import AccountSettings from '../components/AccountSettings';
 import CollectionCards from '../components/CollectionCards';
 import CollectionTable from '../components/CollectionTable';
 import Dashboard from '../components/Dashboard';
@@ -154,6 +155,24 @@ function LocalImportBanner({
         </div>
       </div>
     </section>
+  );
+}
+
+function AccountPage({ user }: { user: User }) {
+  return (
+    <AppShell
+      user={user}
+      onCreateWine={() => {
+        window.location.href = '/app';
+      }}
+      onSignOut={() => void authService.signOut()}
+      basePath="/app"
+      profilePath="/account"
+    >
+      <main className="mx-auto max-w-5xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8">
+        <AccountSettings user={user} />
+      </main>
+    </AppShell>
   );
 }
 
@@ -314,6 +333,8 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
       user={user}
       onCreateWine={openCreate}
       onSignOut={() => void authService.signOut()}
+      basePath="/app"
+      profilePath="/account"
     >
       <main className={`mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8 ${hasLocalImport ? 'pb-44 sm:pb-48 lg:pb-28' : ''}`}>
         <div className="relative">
@@ -613,11 +634,12 @@ export default function App() {
   if (isLoading) return <LoadingScreen />;
 
   if (user) {
+    if (route === '/account') return <AccountPage user={user} />;
     if (route !== '/app') return <RouteRedirect to="/app" replace={replace} />;
     return <AuthenticatedCellar user={user} accessToken={session?.access_token ?? ''} />;
   }
 
-  if (route === '/app') return <RouteRedirect to="/login" replace={replace} />;
+  if (route === '/app' || route === '/account') return <RouteRedirect to="/login" replace={replace} />;
   if (route === '/login' || route === '/signup') {
     return (
       <AuthScreen

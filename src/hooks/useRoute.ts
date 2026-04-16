@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 
-export type AppRoute = '/' | '/app' | '/login' | '/signup';
+export type AppRoute = '/' | '/app' | '/account' | '/login' | '/signup';
 
-const routes = new Set<AppRoute>(['/', '/app', '/login', '/signup']);
+const routes = new Set<AppRoute>(['/', '/app', '/account', '/login', '/signup']);
 
 function getCurrentRoute(): AppRoute {
   const path = window.location.pathname.replace(/\/+$/, '') || '/';
@@ -33,4 +33,3 @@ export function useRoute() {
 
   return { route, navigate, replace };
 }
-

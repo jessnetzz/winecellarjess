@@ -8,6 +8,8 @@ interface AppShellProps {
   user: User;
   onCreateWine: () => void;
   onSignOut: () => void;
+  basePath?: string;
+  profilePath?: string;
 }
 
 const navItems: Array<{ label: string; href: string; icon: IconName }> = [
@@ -26,7 +28,7 @@ const mobileNavItems: Array<{ label: string; href?: string; icon: IconName; acti
   { label: 'Settings', href: '#settings', icon: 'user' },
 ];
 
-function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
+function Sidebar({ onCreateWine, basePath = '/app' }: Pick<AppShellProps, 'onCreateWine' | 'basePath'>) {
   return (
     <aside className="hidden min-h-screen w-72 shrink-0 border-r border-[#E7DCCB] bg-porcelain/90 px-4 py-5 backdrop-blur lg:sticky lg:top-0 lg:block">
       <div className="flex items-center gap-3 px-2">
@@ -41,7 +43,7 @@ function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
 
       <nav className="mt-8 space-y-1 border-y border-[#E7DCCB] py-4" aria-label="Primary navigation">
         {navItems.map((item, index) => (
-          <a key={item.href} className={`nav-item ${index === 0 ? 'nav-item-active' : ''}`} href={item.href}>
+          <a key={item.href} className={`nav-item ${index === 0 ? 'nav-item-active' : ''}`} href={`${basePath}${item.href}`}>
             <Icon name={item.icon} className="h-5 w-5" />
             {item.label}
           </a>
@@ -65,6 +67,7 @@ function Sidebar({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
 function TopNav({
   user,
   onSignOut,
+  profilePath = '/account',
 }: Omit<AppShellProps, 'children'>) {
   const cellarLabel = getUserCellarLabel(user);
 
@@ -77,12 +80,15 @@ function TopNav({
           </div>
 
           <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
-            <div className="interactive-surface hidden items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm hover:border-lavender/35 hover:bg-white hover:shadow-subtle sm:flex">
+            <a
+              className="interactive-surface hidden items-center gap-2 rounded-lg border border-plum/15 bg-white/85 px-3 py-2 shadow-sm hover:border-lavender/35 hover:bg-white hover:shadow-subtle sm:flex"
+              href={profilePath}
+            >
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-lavender/20 text-plum">
                 <Icon name="user" className="h-4 w-4" />
               </span>
               <span className="max-w-[170px] truncate text-sm font-semibold text-ink">{user.email}</span>
-            </div>
+            </a>
             <button className="ghost-button" type="button" onClick={onSignOut}>
               Sign out
             </button>
@@ -92,7 +98,7 @@ function TopNav({
   );
 }
 
-function BottomNav({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
+function BottomNav({ onCreateWine, basePath = '/app', profilePath = '/account' }: Pick<AppShellProps, 'onCreateWine' | 'basePath' | 'profilePath'>) {
   return (
     <nav className="fixed inset-x-3 bottom-3 z-40 rounded-lg border border-[#E7DCCB] bg-porcelain/95 px-2 py-2 shadow-cellar backdrop-blur-xl lg:hidden" aria-label="Mobile primary navigation">
       <div className="grid grid-cols-5 items-center gap-1">
@@ -113,7 +119,7 @@ function BottomNav({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
               {content}
             </button>
           ) : (
-            <a key={item.href} className={baseClass} href={item.href}>
+            <a key={item.href} className={baseClass} href={item.label === 'Settings' ? profilePath : `${basePath}${item.href}`}>
               {content}
             </a>
           );
@@ -126,12 +132,12 @@ function BottomNav({ onCreateWine }: Pick<AppShellProps, 'onCreateWine'>) {
 export default function AppShell(props: AppShellProps) {
   return (
     <div className="app-shell flex">
-      <Sidebar onCreateWine={props.onCreateWine} />
+      <Sidebar onCreateWine={props.onCreateWine} basePath={props.basePath} />
       <div className="min-w-0 flex-1 pb-24 lg:pb-0">
         <TopNav {...props} />
         {props.children}
       </div>
-      <BottomNav onCreateWine={props.onCreateWine} />
+      <BottomNav onCreateWine={props.onCreateWine} basePath={props.basePath} profilePath={props.profilePath} />
     </div>
   );
 }
