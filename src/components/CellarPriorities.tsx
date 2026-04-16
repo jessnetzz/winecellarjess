@@ -10,6 +10,47 @@ interface CellarPrioritiesProps {
   onSelectWine: (wine: Wine) => void;
 }
 
+interface PriorityGroup {
+  title: string;
+  subtitle: string;
+  wines: Wine[];
+  emptyMessage: string;
+}
+
+function getReachForScore(wine: Wine) {
+  const drinkability = getDrinkabilityInfo(wine);
+  const profile = mapWineToProfile(wine);
+  let score = drinkability.urgencyScore * 2.5;
+
+  if (drinkability.status === 'Past peak') score += 20;
+  if (drinkability.status === 'Nearing end of peak') score += 16;
+  if (drinkability.status === 'Peak window') score += 10;
+
+  if (wine.quantity > 1) score += 6;
+  if ((wine.personalRating ?? 0) >= 4) score += 8;
+  if (['light_red', 'medium_red', 'rich_white', 'crisp_white', 'rose'].includes(profile.styleFamily)) score += 4;
+  if (profile.readinessTag === 'ready_now' || profile.readinessTag === 'peak_window') score += 4;
+
+  return score;
+}
+
+function getTopRightNowScore(wine: Wine) {
+  const drinkability = getDrinkabilityInfo(wine);
+  const rating = wine.personalRating ?? 0;
+  const valueSignal = Math.max(wine.marketValue || 0, wine.purchasePrice || 0);
+  let score = 0;
+
+  if (drinkability.status === 'Peak window') score += 28;
+  else if (drinkability.status === 'Ready to drink') score += 18;
+  else return -100;
+
+  score += rating * 10;
+  score += Math.min(valueSignal / 25, 10);
+  if (wine.quantity > 1) score += 2;
+
+  return score;
+}
+
 function PriorityWine({ wine, onSelectWine }: { wine: Wine; onSelectWine: (wine: Wine) => void }) {
   const profile = mapWineToProfile(wine);
   const drinkStatus = getDrinkabilityInfo(wine).status;
@@ -68,16 +109,38 @@ export default function CellarPriorities({ wines, onSelectWine }: CellarPrioriti
     ['Ready to drink', 'Peak window'].includes(getDrinkabilityInfo(wine).status),
   );
   const drinkSoon = sortedByUrgency.filter((wine) => getDrinkabilityInfo(wine).status === 'Nearing end of peak');
-  const pastPeak = sortedByUrgency.filter((wine) => getDrinkabilityInfo(wine).status === 'Past peak');
-  const topPeak = sortedByUrgency
-    .filter((wine) => getDrinkabilityInfo(wine).status === 'Peak window' && (wine.personalRating ?? 0) >= 94)
-    .sort((a, b) => (b.personalRating ?? 0) - (a.personalRating ?? 0));
+  const firstReachFor = [...sortedByUrgency]
+    .filter((wine) => ['Nearing end of peak', 'Past peak', 'Peak window'].includes(getDrinkabilityInfo(wine).status))
+    .sort((a, b) => getReachForScore(b) - getReachForScore(a));
+  const topRightNow = [...sortedByUrgency]
+    .filter((wine) => ['Peak window', 'Ready to drink'].includes(getDrinkabilityInfo(wine).status))
+    .sort((a, b) => getTopRightNowScore(b) - getTopRightNowScore(a));
 
-  const priorityGroups = [
-    { title: 'Ready now', wines: readyNow },
-    { title: 'Drink soon', wines: drinkSoon },
-    { title: 'The First Ones I’d Reach For', wines: pastPeak },
-    { title: 'Top Bottles Right Now', wines: topPeak },
+  const priorityGroups: PriorityGroup[] = [
+    {
+      title: 'Ready now',
+      subtitle: 'Bottles already in a lovely place.',
+      wines: readyNow,
+      emptyMessage: 'Nothing especially ready at this moment, which simply means the cellar still has a little patience.',
+    },
+    {
+      title: 'Drink soon',
+      subtitle: 'Worth opening before the window starts to narrow.',
+      wines: drinkSoon,
+      emptyMessage: 'Nothing is really nudging you right now. The cellar can rest for a bit.',
+    },
+    {
+      title: 'The First Ones I’d Reach For',
+      subtitle: 'Bottles worth opening before the moment passes.',
+      wines: firstReachFor,
+      emptyMessage: 'Nothing is really stepping forward just now. That is a very calm cellar problem to have.',
+    },
+    {
+      title: 'Top Bottles Right Now',
+      subtitle: 'The standouts currently drinking beautifully.',
+      wines: topRightNow,
+      emptyMessage: 'No obvious star tonight. A few bottles are lovely, but none are especially stealing the spotlight.',
+    },
   ];
 
   return (
@@ -97,12 +160,13 @@ export default function CellarPriorities({ wines, onSelectWine }: CellarPrioriti
         {priorityGroups.map((group) => (
           <div key={group.title}>
             <h3 className="text-sm font-extrabold uppercase tracking-wide text-vine">{group.title}</h3>
+            <p className="mt-1 text-xs leading-5 text-smoke">{group.subtitle}</p>
             <div className="mt-3 space-y-3">
               {group.wines.length ? (
                 group.wines.slice(0, 3).map((wine) => <PriorityWine key={wine.id} wine={wine} onSelectWine={onSelectWine} />)
               ) : (
                 <div className="rounded-lg border border-dashed border-ink/20 p-4 text-sm leading-6 text-smoke">
-                  Nothing urgent here. That is a fine cellar problem to have.
+                  {group.emptyMessage}
                 </div>
               )}
             </div>
