@@ -39,15 +39,18 @@ export const authService = {
     return data as Database['public']['Tables']['profiles']['Row'] | null;
   },
 
-  async updateProfile(user: User, input: { fullName: string; email: string }) {
+  async updateProfile(user: User, input: { fullName: string; firstName?: string; lastName?: string; email: string }) {
     const client = requireSupabase();
     const fullName = input.fullName.trim();
+    const firstName = input.firstName?.trim() ?? '';
+    const lastName = input.lastName?.trim() ?? '';
     const email = input.email.trim();
     const metadata = {
       ...user.user_metadata,
       full_name: fullName || null,
       name: fullName || null,
-      first_name: fullName ? fullName.split(/\s+/)[0] : null,
+      first_name: firstName || (fullName ? fullName.split(/\s+/)[0] : null),
+      last_name: lastName || null,
     };
 
     const { data, error } = await client.auth.updateUser({

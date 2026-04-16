@@ -14,8 +14,21 @@ function getInitialFullName(user: User) {
   return candidates[0]?.trim() ?? '';
 }
 
+function splitName(fullName: string) {
+  const trimmed = fullName.trim();
+  if (!trimmed) return { firstName: '', lastName: '' };
+
+  const [firstName, ...rest] = trimmed.split(/\s+/);
+  return {
+    firstName: firstName ?? '',
+    lastName: rest.join(' '),
+  };
+}
+
 export default function AccountSettings({ user }: AccountSettingsProps) {
-  const [fullName, setFullName] = useState(getInitialFullName(user));
+  const initialName = useMemo(() => splitName(getInitialFullName(user)), [user]);
+  const [firstName, setFirstName] = useState(initialName.firstName);
+  const [lastName, setLastName] = useState(initialName.lastName);
   const [email, setEmail] = useState(user.email ?? '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -26,19 +39,23 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
   const [isSavingDetails, setIsSavingDetails] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
 
-  const initialFullName = useMemo(() => getInitialFullName(user), [user]);
   const initialEmail = user.email ?? '';
 
   useEffect(() => {
     let active = true;
 
-    setFullName(initialFullName);
+    setFirstName(initialName.firstName);
+    setLastName(initialName.lastName);
     setEmail(initialEmail);
 
     void authService.getProfile(user.id)
       .then((profile) => {
         if (!active || !profile) return;
-        if (profile.full_name?.trim()) setFullName(profile.full_name.trim());
+        if (profile.full_name?.trim()) {
+          const nextName = splitName(profile.full_name.trim());
+          setFirstName(nextName.firstName);
+          setLastName(nextName.lastName);
+        }
         if (profile.email?.trim()) setEmail(profile.email.trim());
       })
       .catch(() => {
@@ -48,9 +65,10 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
     return () => {
       active = false;
     };
-  }, [initialEmail, initialFullName, user.id]);
+  }, [initialEmail, initialName.firstName, initialName.lastName, user.id]);
 
-  const detailsChanged = fullName.trim() !== initialFullName || email.trim() !== initialEmail;
+  const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ');
+  const detailsChanged = firstName.trim() !== initialName.firstName || lastName.trim() !== initialName.lastName || email.trim() !== initialEmail;
 
   const saveDetails = async (event: FormEvent) => {
     event.preventDefault();
@@ -64,7 +82,7 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
 
     setIsSavingDetails(true);
     try {
-      await authService.updateProfile(user, { fullName, email });
+      await authService.updateProfile(user, { fullName, firstName, lastName, email });
       setDetailsMessage(
         email.trim() !== initialEmail
           ? 'Profile updated. If you changed your email, Supabase may ask you to confirm it before the new address becomes active.'
@@ -131,10 +149,16 @@ export default function AccountSettings({ user }: AccountSettingsProps) {
               Update the name that appears around the app, plus the email tied to your account.
             </p>
           </div>
-          <label className="block">
-            <span className="field-label">Full name</span>
-            <input className="field mt-2" value={fullName} onChange={(event) => setFullName(event.target.value)} />
-          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="field-label">First name</span>
+              <input className="field mt-2" value={firstName} onChange={(event) => setFirstName(event.target.value)} />
+            </label>
+            <label className="block">
+              <span className="field-label">Last name</span>
+              <input className="field mt-2" value={lastName} onChange={(event) => setLastName(event.target.value)} />
+            </label>
+          </div>
           <label className="block">
             <span className="field-label">Email</span>
             <input className="field mt-2" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />

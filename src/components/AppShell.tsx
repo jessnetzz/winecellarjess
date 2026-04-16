@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import Icon, { IconName } from './Icon';
-import { getUserCellarLabel } from '../utils/userDisplayName';
+import { getUserCellarLabel, getUserFirstName } from '../utils/userDisplayName';
 
 interface AppShellProps {
   children: ReactNode;
@@ -70,6 +70,7 @@ function TopNav({
   profilePath = '/account',
 }: Omit<AppShellProps, 'children'>) {
   const cellarLabel = getUserCellarLabel(user);
+  const firstName = getUserFirstName(user);
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#E7DCCB] bg-paper/95 backdrop-blur-xl">
@@ -87,7 +88,7 @@ function TopNav({
               <span className="flex h-7 w-7 items-center justify-center rounded-md bg-lavender/20 text-plum">
                 <Icon name="user" className="h-4 w-4" />
               </span>
-              <span className="max-w-[170px] truncate text-sm font-semibold text-ink">{user.email}</span>
+              <span className="max-w-[170px] truncate text-sm font-semibold text-ink">{firstName || user.email}</span>
             </a>
             <button className="ghost-button" type="button" onClick={onSignOut}>
               Sign out
