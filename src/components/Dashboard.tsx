@@ -313,7 +313,9 @@ export default function Dashboard({ wines }: DashboardProps) {
 
       <section id="analytics" className="panel scroll-mt-32 overflow-hidden">
         <div className="drink-soon-header border-b border-ink/10 px-5 py-5 text-center text-white">
-          <h2 className="font-serif text-3xl font-bold">Cellar Composition</h2>
+          <h2 className="font-liam text-[2.35rem] font-normal leading-none text-white sm:text-[2.55rem]">
+            Cellar Composition
+          </h2>
           <p className="mt-2 text-sm leading-6 text-white/80">
             A quick look at the types, regions, vintages, and world balance in your collection.
           </p>

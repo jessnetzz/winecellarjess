@@ -215,20 +215,26 @@ export default function FiltersPanel({ filters, sort, wines, visibleWineCount, o
 
   return (
     <section className="panel overflow-hidden">
-      <div className="border-b border-gold/20 bg-gradient-to-br from-[#FFF9F0]/95 via-[#FBF3EA]/90 to-[#F7EEF5]/75 px-5 py-5 text-center shadow-subtle sm:px-6">
+      <div className="drink-soon-header border-b border-ink/10 px-5 py-5 text-white shadow-subtle sm:px-6">
         <div className="relative">
-          <div className="mx-auto max-w-2xl text-center">
-            <h2 className="flex items-center justify-center gap-3 font-liam text-[2.15rem] font-normal leading-none text-ink sm:text-[2.45rem]">
-              <span className="text-base text-gold/65" aria-hidden="true">✦</span>
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-2.5 text-center">
+            <span
+              className="block h-px w-24 bg-gradient-to-r from-transparent via-white/70 to-transparent"
+              aria-hidden="true"
+            />
+            <h2 className="flex items-center justify-center gap-3 font-liam text-[2.1rem] font-normal leading-none text-white sm:text-[2.4rem]">
+              <span className="text-sm text-straw/70" aria-hidden="true">✦</span>
               <span>Collection</span>
-              <span className="text-base text-gold/65" aria-hidden="true">✦</span>
+              <span className="text-sm text-straw/70" aria-hidden="true">✦</span>
             </h2>
-            <p className="mt-2 font-serif text-xl font-bold text-ink sm:text-2xl">
-              {visibleWineCount} wine{visibleWineCount === 1 ? '' : 's'} in view
-            </p>
+            <div className="rounded-full border border-white/30 bg-white/10 px-4 py-1.5 shadow-sm backdrop-blur-sm">
+              <p className="font-serif text-base font-bold text-white sm:text-lg">
+                {visibleWineCount} wine{visibleWineCount === 1 ? '' : 's'} in view
+              </p>
+            </div>
           </div>
           <button
-            className="ghost-button mx-auto mt-3 sm:absolute sm:bottom-0 sm:right-0 sm:mx-0 sm:mt-0"
+            className="mx-auto mt-3 inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold text-white/88 transition duration-300 ease-out hover:bg-white/10 hover:text-white sm:absolute sm:bottom-0 sm:right-0 sm:mx-0 sm:mt-0"
             type="button"
             onClick={clearFilters}
           >

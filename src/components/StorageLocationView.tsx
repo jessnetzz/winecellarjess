@@ -14,15 +14,18 @@ export default function StorageLocationView({ wines, onSelectWine }: StorageLoca
   }, {});
 
   return (
-    <section className="panel p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="section-kicker">Storage map</p>
-          <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Find the bottle</h2>
+    <section className="panel overflow-hidden">
+      <div className="drink-soon-header border-b border-ink/10 px-5 py-5 text-center text-white">
+        <div className="mx-auto max-w-3xl">
+          <h2 className="font-liam text-[2.35rem] font-normal leading-none text-white sm:text-[2.55rem]">
+            Find the bottle
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/78">
+            Grouped by rack, shelf, bin, box, fridge, or any display location you enter.
+          </p>
         </div>
-        <p className="text-sm leading-6 text-smoke">Grouped by rack, shelf, bin, box, fridge, or any display location you enter.</p>
       </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 p-5 md:grid-cols-2 xl:grid-cols-3">
         {Object.entries(groups)
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([location, locationWines]) => (

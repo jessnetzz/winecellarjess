@@ -197,12 +197,11 @@ export default function CellarPriorities({ wines, onSelectWine }: CellarPrioriti
   return (
     <section className="panel overflow-hidden">
       <div className="drink-soon-header border-b border-ink/10 px-5 py-4 text-white">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wide text-white/70">Cellar priorities</p>
-            <h2 className="mt-2 font-serif text-3xl font-bold">What deserves attention?</h2>
-          </div>
-          <p className="max-w-xl text-sm leading-6 text-white/78">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="font-liam text-[2.35rem] font-normal leading-none text-white sm:text-[2.55rem]">
+            What deserves attention?
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/78">
             Prioritized by your drink-window years, best-drink target, status, rating, and bottle quantity.
           </p>
         </div>
