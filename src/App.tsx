@@ -287,19 +287,18 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
     >
       <main className={`mx-auto max-w-7xl space-y-6 px-4 py-5 sm:space-y-8 sm:px-6 sm:py-8 lg:px-8 ${hasLocalImport ? 'pb-44 sm:pb-48 lg:pb-28' : ''}`}>
         <section className="whimsy-hero grid max-w-full gap-4 rounded-lg border border-[#E7DCCB] p-4 shadow-subtle sm:gap-6 sm:p-6 xl:min-h-[430px] xl:grid-cols-[minmax(0,1fr)_336px] xl:items-center xl:gap-10">
-          <div className="min-w-0 xl:mx-auto xl:flex xl:min-h-[360px] xl:w-full xl:max-w-[760px] xl:flex-col xl:justify-center">
-            <div className="xl:max-w-[680px]">
-              <p className="section-kicker">{cellarLabel}</p>
-              <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight">
-                <span className="block">Everything you love</span>
-                <span className="block">about your wines.</span>
+          <div className="min-w-0 xl:mx-auto xl:flex xl:min-h-[360px] xl:w-full xl:max-w-[860px] xl:flex-col xl:justify-center">
+            <div className="xl:mx-auto xl:max-w-[780px] xl:text-center">
+              <p className="section-kicker xl:text-center">{cellarLabel}</p>
+              <h1 className="mt-2 max-w-3xl whitespace-normal break-words font-liam text-[2.55rem] font-normal leading-[1.05] text-ink sm:mt-3 sm:text-5xl sm:leading-[1.08] lg:text-6xl lg:leading-tight xl:mx-auto xl:max-w-none">
+                Everything you love about your wines.
               </h1>
-              <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-smoke sm:mt-5 sm:text-lg sm:leading-8">
+              <p className="mt-4 max-w-2xl whitespace-normal break-words text-base leading-7 text-smoke sm:mt-5 sm:text-lg sm:leading-8 xl:mx-auto">
                 All in one place—even the little details you forget.
               </p>
-              <div className={`hero-cellar-note hero-cellar-note--${dailyWineFact.tone} mt-4 max-w-xl`}>
-                <div className="flex items-start justify-between gap-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-plum/75">Today&apos;s wine fact</p>
+              <div className={`hero-cellar-note hero-cellar-note--${dailyWineFact.tone} mt-4 max-w-xl xl:mx-auto`}>
+                <div className="flex items-start justify-between gap-3 xl:items-center">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-plum/75 xl:text-left">Today&apos;s wine fact</p>
                   <span className="hero-cellar-note-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" className="hero-cellar-note-sparkle" fill="none">
                       <path
@@ -310,15 +309,15 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                     </svg>
                   </span>
                 </div>
-                <p className="mt-2 text-sm font-bold uppercase tracking-[0.14em] text-smoke/80">
+                <p className="mt-2 text-sm font-bold uppercase tracking-[0.14em] text-smoke/80 xl:text-center">
                   {dailyWineFact.title}
                 </p>
-                <p className="mt-2 font-serif text-lg leading-7 text-ink/85 sm:text-[1.35rem] sm:leading-8">
+                <p className="mt-2 font-serif text-lg leading-7 text-ink/85 sm:text-[1.35rem] sm:leading-8 xl:text-center">
                   {dailyWineFact.body}
                 </p>
               </div>
             </div>
-            <div className="mt-4 grid gap-4 sm:mt-5 xl:w-full xl:max-w-[760px]">
+            <div className="mt-4 grid gap-4 sm:mt-5 xl:w-full xl:max-w-[820px]">
               <CellarStats wines={wines} />
               <div className="xl:hidden">
                 <TonightsBottleCard wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
