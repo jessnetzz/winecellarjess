@@ -5,6 +5,7 @@ interface FiltersPanelProps {
   filters: WineFilters;
   sort: SortConfig;
   wines: Wine[];
+  visibleWineCount: number;
   onFiltersChange: (filters: WineFilters) => void;
   onSortChange: (sort: SortConfig) => void;
 }
@@ -49,7 +50,7 @@ function blankFilters(): WineFilters {
   };
 }
 
-export default function FiltersPanel({ filters, sort, wines, onFiltersChange, onSortChange }: FiltersPanelProps) {
+export default function FiltersPanel({ filters, sort, wines, visibleWineCount, onFiltersChange, onSortChange }: FiltersPanelProps) {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const countries = uniqueValues(wines, (wine) => wine.country);
   const regions = uniqueValues(wines, (wine) => wine.region);
@@ -214,13 +215,20 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
 
   return (
     <section className="panel overflow-hidden">
-      <div className="drink-soon-header border-b border-ink/10 px-5 py-4 text-white">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="font-serif text-3xl font-bold">Find your bottle</h2>
+      <div className="border-b border-gold/20 bg-gradient-to-br from-[#FFF9F0]/95 via-[#FBF3EA]/90 to-[#F7EEF5]/75 px-5 py-5 text-center shadow-subtle sm:px-6">
+        <div className="relative">
+          <div className="mx-auto max-w-2xl text-center">
+            <h2 className="flex items-center justify-center gap-3 font-liam text-[2.15rem] font-normal leading-none text-ink sm:text-[2.45rem]">
+              <span className="text-base text-gold/65" aria-hidden="true">✦</span>
+              <span>Collection</span>
+              <span className="text-base text-gold/65" aria-hidden="true">✦</span>
+            </h2>
+            <p className="mt-2 font-serif text-xl font-bold text-ink sm:text-2xl">
+              {visibleWineCount} wine{visibleWineCount === 1 ? '' : 's'} in view
+            </p>
           </div>
           <button
-            className="text-sm font-semibold text-white/88 transition duration-300 ease-out hover:text-white"
+            className="ghost-button mx-auto mt-3 sm:absolute sm:bottom-0 sm:right-0 sm:mx-0 sm:mt-0"
             type="button"
             onClick={clearFilters}
           >
@@ -268,7 +276,7 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-white/70">Advanced filters</p>
-                  <h3 className="mt-1 font-serif text-2xl font-bold">Find your bottle</h3>
+                  <h3 className="mt-1 font-serif text-2xl font-bold">Collection</h3>
                 </div>
                 <button className="text-sm font-semibold text-white/88 transition duration-300 ease-out hover:text-white" type="button" onClick={() => setIsMobileFiltersOpen(false)}>
                   Done

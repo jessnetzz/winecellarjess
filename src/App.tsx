@@ -422,28 +422,20 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                 <section id="drink-now" className="scroll-mt-32">
                   <CellarPriorities wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
                 </section>
-                <FiltersPanel filters={filters} sort={sort} wines={wines} onFiltersChange={setFilters} onSortChange={setSort} />
+                <FiltersPanel
+                  filters={filters}
+                  sort={sort}
+                  wines={wines}
+                  visibleWineCount={filteredWines.length}
+                  onFiltersChange={setFilters}
+                  onSortChange={setSort}
+                />
               </>
             ) : null}
 
             {!isSearchingByText ? (
               <section id="collection" className="scroll-mt-32">
                 <>
-                  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <h2 className="flex items-center gap-3 font-liam text-[2.15rem] font-normal leading-none text-ink sm:text-[2.45rem]">
-                        <span className="text-base text-gold/65" aria-hidden="true">✦</span>
-                        <span>Collection</span>
-                        <span className="text-base text-gold/65" aria-hidden="true">✦</span>
-                      </h2>
-                      <p className="mt-2 font-serif text-xl font-bold text-ink sm:text-2xl">
-                        {filteredWines.length} wine{filteredWines.length === 1 ? '' : 's'} in view
-                      </p>
-                    </div>
-                    <p className="text-sm text-smoke">
-                      Sorted by {sort.key} {sort.direction === 'asc' ? 'ascending' : 'descending'}
-                    </p>
-                  </div>
                   <div className={viewMode === 'cards' ? '' : 'lg:hidden'}>
                     <CollectionCards
                       wines={filteredWines}
