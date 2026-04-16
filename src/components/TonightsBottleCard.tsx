@@ -22,6 +22,10 @@ function getBottleMomentLabel(date = new Date()) {
   return hour >= 5 && hour < 16 ? 'Today’s Bottle' : 'Tonight’s Bottle';
 }
 
+function getBottleMomentIcon(label: string) {
+  return label === 'Today’s Bottle' ? '☀️' : '🌙';
+}
+
 function buildCardNoteSummary(body?: string) {
   if (!body) return '';
 
@@ -122,12 +126,14 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
       </section>
     );
   }
+  const bottleMomentIcon = getBottleMomentIcon(bottleMomentLabel);
+
   return (
     <section className="tonights-bottle-card space-y-5" aria-labelledby="tonights-bottle-heading">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-plum/18 bg-white/78 px-3 py-1.5 shadow-sm">
-            <span className="h-1.5 w-1.5 rounded-full bg-gold" aria-hidden="true" />
+            <span className="text-sm leading-none" aria-hidden="true">{bottleMomentIcon}</span>
             <p id="tonights-bottle-heading" className="text-[12px] font-bold uppercase tracking-[0.16em] text-plum">{bottleMomentLabel}</p>
           </div>
           {weatherContextLabel ? (
@@ -142,7 +148,6 @@ export default function TonightsBottleCard({ wines, onSelectWine }: TonightsBott
             {wine.vintage} {wine.name}
           </h2>
         </div>
-        <span className="shrink-0 rounded-lg bg-gold/12 px-2.5 py-2 text-base" aria-hidden="true">🌙</span>
       </div>
 
       <div className="rounded-lg border border-gold/15 bg-white/55 px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
