@@ -358,6 +358,25 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
           onToggleView={() => setViewMode(viewMode === 'cards' ? 'table' : 'cards')}
         />
 
+        {wines.length && isSearchingByText ? (
+          <section id="collection" className="scroll-mt-32">
+            <SearchResultsSection
+              query={searchQuery}
+              wines={filteredWines}
+              searchMatches={searchMatchById}
+              isLoading={naturalSearch.isLoading}
+              error={naturalSearch.error}
+              viewMode={viewMode}
+              sort={sort}
+              onClearSearch={clearSearch}
+              onSortChange={setSort}
+              onSelectWine={(wine) => setSelectedWineId(wine.id)}
+              onEditWine={openEdit}
+              onDeleteWine={(wine) => setDeleteTarget(wine)}
+            />
+          </section>
+        ) : null}
+
         {error ? (
           <section className="rounded-lg border border-clay/30 bg-clay/10 p-5 text-sm leading-6 text-clay">
             <p className="font-bold">Something needs attention</p>
@@ -404,27 +423,12 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                 <section id="drink-now" className="scroll-mt-32">
                   <CellarPriorities wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
                 </section>
+                <FiltersPanel filters={filters} sort={sort} wines={wines} onFiltersChange={setFilters} onSortChange={setSort} />
               </>
             ) : null}
-            <FiltersPanel filters={filters} sort={sort} wines={wines} onFiltersChange={setFilters} onSortChange={setSort} />
 
-            <section id="collection" className="scroll-mt-32">
-              {isSearchingByText ? (
-                <SearchResultsSection
-                  query={searchQuery}
-                  wines={filteredWines}
-                  searchMatches={searchMatchById}
-                  isLoading={naturalSearch.isLoading}
-                  error={naturalSearch.error}
-                  viewMode={viewMode}
-                  sort={sort}
-                  onClearSearch={clearSearch}
-                  onSortChange={setSort}
-                  onSelectWine={(wine) => setSelectedWineId(wine.id)}
-                  onEditWine={openEdit}
-                  onDeleteWine={(wine) => setDeleteTarget(wine)}
-                />
-              ) : (
+            {!isSearchingByText ? (
+              <section id="collection" className="scroll-mt-32">
                 <>
                   <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -458,8 +462,8 @@ function AuthenticatedCellar({ user, accessToken }: { user: User; accessToken: s
                     </div>
                   ) : null}
                 </>
-              )}
-            </section>
+              </section>
+            ) : null}
 
             <section id="storage" className="scroll-mt-32">
               <StorageLocationView wines={wines} onSelectWine={(wine) => setSelectedWineId(wine.id)} />
