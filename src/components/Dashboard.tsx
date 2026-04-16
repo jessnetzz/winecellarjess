@@ -1,4 +1,5 @@
 import DrinkStatusBadge from './DrinkStatusBadge';
+import CellarInsights from './CellarInsights';
 import Icon, { IconName } from './Icon';
 import { mapWineToProfile } from '../services/wineAttributeMapper';
 import { getProfileContextSummary, getProfileSupportChips } from '../services/wineProfileSelectors';
@@ -174,18 +175,22 @@ export default function Dashboard({ wines, onSelectWine }: DashboardProps) {
           </div>
         </section>
 
-        <section id="analytics" className="panel scroll-mt-32 p-5">
-          <div>
-            <p className="section-kicker">Analytics</p>
-            <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Collection shape</h2>
-          </div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <BarList title="By region" data={byRegion} />
-            <BarList title="By style" data={byStyle} />
-            <BarList title="By decade" data={byDecade} />
-            <BarList title="Drink-by years" data={byDrinkWindow} />
-          </div>
-        </section>
+        <div className="space-y-5">
+          <CellarInsights wines={wines} />
+
+          <section id="analytics" className="panel scroll-mt-32 p-5">
+            <div>
+              <p className="section-kicker">Analytics</p>
+              <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Collection shape</h2>
+            </div>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <BarList title="By region" data={byRegion} />
+              <BarList title="By style" data={byStyle} />
+              <BarList title="By decade" data={byDecade} />
+              <BarList title="Drink-by years" data={byDrinkWindow} />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
