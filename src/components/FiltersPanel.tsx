@@ -213,61 +213,67 @@ export default function FiltersPanel({ filters, sort, wines, onFiltersChange, on
   );
 
   return (
-    <section className="panel p-5">
-      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="section-kicker">Filters</p>
-          <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Refine the cellar</h2>
+    <section className="panel overflow-hidden">
+      <div className="drink-soon-header border-b border-ink/10 px-5 py-4 text-white">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-serif text-3xl font-bold">Find your bottle</h2>
+          </div>
+          <button
+            className="text-sm font-semibold text-white/88 transition duration-300 ease-out hover:text-white"
+            type="button"
+            onClick={clearFilters}
+          >
+            Clear filters
+          </button>
         </div>
-        <button
-          className="ghost-button"
-          type="button"
-          onClick={clearFilters}
-        >
-          Clear filters
-        </button>
       </div>
 
-      <div className="lg:hidden">
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {quickDrinkOptions.map((option) => (
-            <button
-              key={option.value}
-              className={`filter-chip ${filters.drinkability === option.value ? 'filter-chip-active' : ''}`}
-              type="button"
-              onClick={() => update({ drinkability: option.value })}
-            >
-              {option.label}
+      <div className="p-5">
+
+        <div className="lg:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {quickDrinkOptions.map((option) => (
+              <button
+                key={option.value}
+                className={`filter-chip ${filters.drinkability === option.value ? 'filter-chip-active' : ''}`}
+                type="button"
+                onClick={() => update({ drinkability: option.value })}
+              >
+                {option.label}
+              </button>
+            ))}
+            <button className={`filter-chip ${filters.style === 'red' ? 'filter-chip-active' : ''}`} type="button" onClick={() => update({ style: filters.style === 'red' ? 'all' : 'red' })}>
+              Reds
             </button>
-          ))}
-          <button className={`filter-chip ${filters.style === 'red' ? 'filter-chip-active' : ''}`} type="button" onClick={() => update({ style: filters.style === 'red' ? 'all' : 'red' })}>
-            Reds
-          </button>
-          <button className={`filter-chip ${filters.style === 'white' ? 'filter-chip-active' : ''}`} type="button" onClick={() => update({ style: filters.style === 'white' ? 'all' : 'white' })}>
-            Whites
+            <button className={`filter-chip ${filters.style === 'white' ? 'filter-chip-active' : ''}`} type="button" onClick={() => update({ style: filters.style === 'white' ? 'all' : 'white' })}>
+              Whites
+            </button>
+          </div>
+          <button className="secondary-button mt-2 w-full justify-between" type="button" onClick={() => setIsMobileFiltersOpen(true)}>
+            Advanced filters
+            <span className="rounded-md bg-plum/10 px-2 py-0.5 text-xs text-plum">{activeFilterCount}</span>
           </button>
         </div>
-        <button className="secondary-button mt-2 w-full justify-between" type="button" onClick={() => setIsMobileFiltersOpen(true)}>
-          Advanced filters
-          <span className="rounded-md bg-plum/10 px-2 py-0.5 text-xs text-plum">{activeFilterCount}</span>
-        </button>
-      </div>
 
-      <div className="hidden lg:block">
-        <FilterFields />
+        <div className="hidden lg:block">
+          <FilterFields />
+        </div>
       </div>
 
       {isMobileFiltersOpen ? (
         <div className="fixed inset-0 z-50 bg-ink/55 p-3 backdrop-blur-sm lg:hidden" role="dialog" aria-modal="true" aria-label="Advanced filters">
           <div className="ml-auto flex max-h-[calc(100vh-1.5rem)] w-full max-w-md flex-col overflow-hidden rounded-lg border border-[#E7DCCB] bg-porcelain shadow-cellar">
-            <div className="flex items-start justify-between gap-3 border-b border-ink/10 px-4 py-4">
-              <div>
-                <p className="section-kicker">Advanced filters</p>
-                <h3 className="mt-1 font-serif text-2xl font-bold text-ink">Refine the cellar</h3>
+            <div className="drink-soon-header border-b border-ink/10 px-4 py-4 text-white">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-white/70">Advanced filters</p>
+                  <h3 className="mt-1 font-serif text-2xl font-bold">Find your bottle</h3>
+                </div>
+                <button className="text-sm font-semibold text-white/88 transition duration-300 ease-out hover:text-white" type="button" onClick={() => setIsMobileFiltersOpen(false)}>
+                  Done
+                </button>
               </div>
-              <button className="ghost-button" type="button" onClick={() => setIsMobileFiltersOpen(false)}>
-                Done
-              </button>
             </div>
             <div className="overflow-y-auto p-4">
               <FilterFields compact />
