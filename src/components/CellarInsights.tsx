@@ -19,12 +19,12 @@ export default function CellarInsights({ wines }: CellarInsightsProps) {
   if (!insights.length) return null;
 
   return (
-    <section className="panel p-5">
-      <div>
-        <p className="section-kicker">Cellar insights</p>
-        <h2 className="mt-2 font-serif text-3xl font-bold text-ink">Little whispers from the cellar</h2>
+    <section className="panel overflow-hidden">
+      <div className="drink-soon-header border-b border-ink/10 px-5 py-4 text-white">
+        <p className="text-xs font-bold uppercase tracking-wide text-white/70">Cellar insights</p>
+        <h2 className="mt-2 font-serif text-3xl font-bold">Little whispers from the cellar</h2>
       </div>
-      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 p-5 sm:grid-cols-2 xl:grid-cols-3">
         {insights.map((insight) => (
           <article
             key={insight.id}

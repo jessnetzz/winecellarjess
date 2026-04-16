@@ -76,22 +76,24 @@ export default function CellarPriorities({ wines, onSelectWine }: CellarPrioriti
   const priorityGroups = [
     { title: 'Ready now', wines: readyNow },
     { title: 'Drink soon', wines: drinkSoon },
-    { title: 'Past peak', wines: pastPeak },
-    { title: 'Top-rated peak bottles', wines: topPeak },
+    { title: 'The First Ones I’d Reach For', wines: pastPeak },
+    { title: 'Top Bottles Right Now', wines: topPeak },
   ];
 
   return (
-    <section className="panel p-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="section-kicker">Cellar priorities</p>
-          <h2 className="mt-2 font-serif text-3xl font-bold text-ink">What deserves attention?</h2>
+    <section className="panel overflow-hidden">
+      <div className="drink-soon-header border-b border-ink/10 px-5 py-4 text-white">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wide text-white/70">Cellar priorities</p>
+            <h2 className="mt-2 font-serif text-3xl font-bold">What deserves attention?</h2>
+          </div>
+          <p className="max-w-xl text-sm leading-6 text-white/78">
+            Prioritized by your drink-window years, best-drink target, status, rating, and bottle quantity.
+          </p>
         </div>
-        <p className="max-w-xl text-sm leading-6 text-smoke">
-          Prioritized by your drink-window years, best-drink target, status, rating, and bottle quantity.
-        </p>
       </div>
-      <div className="mt-6 grid gap-5 lg:grid-cols-4">
+      <div className="grid gap-5 p-5 lg:grid-cols-4">
         {priorityGroups.map((group) => (
           <div key={group.title}>
             <h3 className="text-sm font-extrabold uppercase tracking-wide text-vine">{group.title}</h3>
