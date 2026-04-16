@@ -11,8 +11,24 @@ function requireSupabase() {
 }
 
 export const authService = {
-  async signUp(email: string, password: string) {
-    const { data, error } = await requireSupabase().auth.signUp({ email, password });
+  async signUp(email: string, password: string, profile?: { firstName?: string; lastName?: string }) {
+    const firstName = profile?.firstName?.trim() ?? '';
+    const lastName = profile?.lastName?.trim() ?? '';
+    const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
+    const { data, error } = await requireSupabase().auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/account`,
+        data: {
+          first_name: firstName || null,
+          last_name: lastName || null,
+          full_name: fullName || null,
+          name: fullName || null,
+        },
+      },
+    });
     if (error) throw error;
     return data;
   },
@@ -25,6 +41,13 @@ export const authService = {
 
   async signOut() {
     const { error } = await requireSupabase().auth.signOut();
+    if (error) throw error;
+  },
+
+  async sendPasswordReset(email: string) {
+    const { error } = await requireSupabase().auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/account`,
+    });
     if (error) throw error;
   },
 
