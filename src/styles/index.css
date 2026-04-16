@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -28,6 +28,7 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  font-family: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
   background:
     radial-gradient(circle at 18px 18px, rgba(110, 74, 114, 0.08) 0 1px, transparent 1px 100%),
     linear-gradient(180deg, #fff9f0 0%, #f8f2e8 50%, #f2eadc 100%);
@@ -128,6 +129,74 @@ select:focus-visible {
     background:
       linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(248, 242, 232, 0.94)),
       radial-gradient(circle at right top, rgba(185, 162, 197, 0.18), transparent 32%);
+  }
+
+  .metric-card-label {
+    @apply transition duration-300 ease-out;
+  }
+
+  .metric-card-helper {
+    @apply text-smoke transition duration-300 ease-out;
+  }
+
+  .metric-card--vine {
+    @apply border-plum/18;
+    background:
+      linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(247, 238, 244, 0.94)),
+      radial-gradient(circle at right top, rgba(123, 84, 117, 0.18), transparent 34%);
+  }
+
+  .metric-card--vine .metric-card-label {
+    color: rgba(123, 84, 117, 0.9);
+  }
+
+  .metric-card--vine .metric-card-helper {
+    color: rgba(123, 84, 117, 0.72);
+  }
+
+  .metric-card--moss {
+    @apply border-moss/18;
+    background:
+      linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(240, 246, 239, 0.94)),
+      radial-gradient(circle at right top, rgba(96, 124, 104, 0.16), transparent 34%);
+  }
+
+  .metric-card--moss .metric-card-label {
+    color: rgba(96, 124, 104, 0.9);
+  }
+
+  .metric-card--moss .metric-card-helper {
+    color: rgba(96, 124, 104, 0.72);
+  }
+
+  .metric-card--gold {
+    @apply border-[#D8C2A5];
+    background:
+      linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(248, 238, 219, 0.94)),
+      radial-gradient(circle at right top, rgba(169, 132, 63, 0.16), transparent 34%);
+  }
+
+  .metric-card--gold .metric-card-label {
+    @apply text-[#7B5A22];
+  }
+
+  .metric-card--gold .metric-card-helper {
+    @apply text-[#8B6B42];
+  }
+
+  .metric-card--clay {
+    @apply border-clay/18;
+    background:
+      linear-gradient(135deg, rgba(255, 249, 240, 0.98), rgba(247, 236, 232, 0.94)),
+      radial-gradient(circle at right top, rgba(179, 116, 100, 0.16), transparent 34%);
+  }
+
+  .metric-card--clay .metric-card-label {
+    color: rgba(179, 116, 100, 0.9);
+  }
+
+  .metric-card--clay .metric-card-helper {
+    color: rgba(179, 116, 100, 0.74);
   }
 
   .metric-card::after {
@@ -478,15 +547,19 @@ select:focus-visible {
   }
 
   .wine-card {
-    @apply interactive-surface relative overflow-hidden rounded-lg border border-white/70 bg-white shadow-subtle hover:-translate-y-1 hover:border-gold/35 hover:shadow-lift;
+    @apply interactive-surface relative overflow-hidden rounded-lg border border-white/70 shadow-subtle hover:-translate-y-1 hover:border-gold/35 hover:shadow-lift;
+    background:
+      linear-gradient(135deg, rgba(253, 242, 227, 0.94), rgba(246, 230, 216, 0.9) 52%, rgba(238, 223, 234, 0.82)),
+      rgba(255, 255, 255, 0.88);
   }
 
   .wine-card::after {
     content: '';
     @apply pointer-events-none absolute inset-0 opacity-0 transition duration-300 ease-out;
     background:
-      radial-gradient(circle at 20% 8%, rgba(185, 142, 69, 0.14), transparent 24%),
-      linear-gradient(135deg, rgba(185, 162, 197, 0.08), transparent 40%);
+      radial-gradient(circle at 20% 8%, rgba(185, 142, 69, 0.12), transparent 24%),
+      linear-gradient(135deg, rgba(185, 162, 197, 0.1), transparent 42%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 55%);
   }
 
   .wine-card:hover::after {
@@ -632,6 +705,25 @@ select:focus-visible {
     content: '';
     @apply absolute inset-y-0 left-0 w-1/2 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent;
     animation: shimmer 1.4s infinite;
+  }
+
+  .recruiting-shell {
+    background:
+      radial-gradient(circle at top left, rgba(112, 196, 179, 0.18), transparent 30%),
+      radial-gradient(circle at 82% 18%, rgba(130, 173, 229, 0.16), transparent 25%),
+      linear-gradient(180deg, #f4f8fb 0%, #eef3f8 42%, #f7fafc 100%);
+  }
+
+  .recruiting-topbar {
+    @apply rounded-[32px] border border-white/70 px-5 py-5 backdrop-blur sm:px-7 sm:py-6 lg:flex lg:items-center lg:justify-between;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(247, 250, 252, 0.7)),
+      radial-gradient(circle at right top, rgba(122, 163, 214, 0.18), transparent 28%);
+    box-shadow: 0 24px 60px rgba(19, 34, 56, 0.08);
+  }
+
+  .recruiting-hero {
+    position: relative;
   }
 }
 

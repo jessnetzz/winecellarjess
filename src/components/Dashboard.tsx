@@ -1,8 +1,7 @@
 import CellarInsights from './CellarInsights';
 import Icon, { IconName } from './Icon';
 import { Wine, WineStyle } from '../types/wine';
-import { formatCurrency, formatRating } from '../utils/formatters';
-import { getDrinkabilityInfo, isDrinkableNow, isInNextTwoYears } from '../utils/drinkWindow';
+import { formatCurrency } from '../utils/formatters';
 
 interface DashboardProps {
   wines: Wine[];
@@ -142,12 +141,12 @@ function MetricCard({ label, value, helper, icon, tone = 'vine' }: MetricCardPro
   }[tone];
 
   return (
-    <article className="metric-card">
+    <article className={`metric-card metric-card--${tone}`}>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="field-label">{label}</p>
+          <p className="field-label metric-card-label">{label}</p>
           <p className="mt-3 text-3xl font-extrabold leading-none text-ink">{value}</p>
-          <p className="mt-3 text-sm leading-6 text-smoke">{helper}</p>
+          <p className="metric-card-helper mt-3 text-sm leading-6">{helper}</p>
         </div>
         <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${toneClasses}`}>
           <Icon name={icon} className="h-5 w-5" />
@@ -289,13 +288,19 @@ function VintageSpreadCard({ data }: { data: Record<string, number> }) {
 export default function Dashboard({ wines }: DashboardProps) {
   const totalBottles = wines.reduce((sum, wine) => sum + wine.quantity, 0);
   const collectionValue = wines.reduce((sum, wine) => sum + wine.marketValue * wine.quantity, 0);
-  const ratedWines = wines.filter((wine) => wine.personalRating);
-  const averageRating = ratedWines.length
-    ? ratedWines.reduce((sum, wine) => sum + (wine.personalRating ?? 0), 0) / ratedWines.length
-    : undefined;
-  const readyNow = wines.filter(isDrinkableNow);
-  const pastPeak = wines.filter((wine) => getDrinkabilityInfo(wine).status === 'Past peak');
-  const nextTwoYears = wines.filter(isInNextTwoYears);
+  const topShelfWine = wines.reduce<Wine | null>((best, wine) => {
+    if (!best) return wine;
+
+    const bestValue = best.marketValue || best.purchasePrice || 0;
+    const wineValue = wine.marketValue || wine.purchasePrice || 0;
+
+    if (wineValue !== bestValue) return wineValue > bestValue ? wine : best;
+    return (wine.personalRating ?? 0) > (best.personalRating ?? 0) ? wine : best;
+  }, null);
+  const recentlyAdded = [...wines]
+    .filter((wine) => wine.createdAt)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 3);
 
   const wineTypes = getWineTypeData(wines);
   const topRegions = getTopRegionsData(wines);
@@ -307,8 +312,20 @@ export default function Dashboard({ wines }: DashboardProps) {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Total bottles" value={String(totalBottles)} helper={`${wines.length} unique wines`} icon="bottle" />
         <MetricCard label="Collection value" value={formatCurrency(collectionValue)} helper="Estimated market value" icon="analytics" tone="gold" />
-        <MetricCard label="Average rating" value={formatRating(averageRating)} helper={`${ratedWines.length} bottles rated`} icon="star" tone="moss" />
-        <MetricCard label="Ready now" value={String(readyNow.length)} helper={`${pastPeak.length} past peak · ${nextTwoYears.length} upcoming`} icon="glass" tone={pastPeak.length ? 'clay' : 'vine'} />
+        <MetricCard
+          label="Top shelf"
+          value={topShelfWine ? formatCurrency(topShelfWine.marketValue || topShelfWine.purchasePrice || 0) : '—'}
+          helper={topShelfWine ? `${topShelfWine.producer} · ${topShelfWine.name}` : 'Your standout bottle'}
+          icon="star"
+          tone="moss"
+        />
+        <MetricCard
+          label="Recently added"
+          value={String(recentlyAdded.length)}
+          helper={recentlyAdded.length ? recentlyAdded.map((wine) => wine.name).join(' · ') : 'No new arrivals just yet'}
+          icon="glass"
+          tone="clay"
+        />
       </div>
 
       <section id="analytics" className="panel scroll-mt-32 overflow-hidden">
